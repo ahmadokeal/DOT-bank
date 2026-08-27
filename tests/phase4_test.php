@@ -34,6 +34,11 @@ $assert($parsed['valid'][0]['answer_data']['correct_answer'] === 'Choice B', 'MC
 
 $invalid = JsonImporter::parse('{"questions":[{"type":"mcq","question":"Bad","frequency":0}]}', $moduleId, $subjectId);
 $assert($invalid['success'] === true && $invalid['summary']['invalid'] === 1, 'Invalid question is reported before import');
+$warningMessages = [];
+set_error_handler(function (int $severity, string $message) use (&$warningMessages): bool { $warningMessages[] = $message; return true; });
+$missingChoice = JsonImporter::parse(json_encode(['questions' => [['type' => 'mcq', 'question' => 'Missing choice C', 'choices' => ['A' => 'Choice A', 'B' => 'Choice B'], 'answer' => 'C']]], JSON_THROW_ON_ERROR), $moduleId, $subjectId);
+restore_error_handler();
+$assert($missingChoice['success'] === true && $missingChoice['summary']['invalid'] === 1 && $warningMessages === [] && str_contains(implode(' ', $missingChoice['invalid'][0]['errors']), 'existing choice label'), 'Invalid MCQ answer is rejected without undefined-key warnings');
 $wrongTarget = JsonImporter::parse($json, $moduleId + 999999, $subjectId);
 $assert($wrongTarget['success'] === false, 'Mismatched module and subject are rejected');
 
