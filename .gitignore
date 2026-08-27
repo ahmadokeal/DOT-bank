@@ -1,0 +1,43 @@
+# Local runtime and database state
+/storage/*
+!/storage/.htaccess
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+credentials.*
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# IDE/editor settings
+.idea/
+.vscode/
+*.code-workspace
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependency/build outputs (if introduced locally)
+/vendor/
+/node_modules/
+/dist/
+/build/
+__pycache__/
+*.py[cod]
+
