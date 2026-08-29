@@ -51,6 +51,8 @@ $active=Quiz::create($student,$exact);$discard=Quiz::discard($active['id'],$stud
 $ok($discard['success']&&Quiz::getForStudent($active['id'],$student)===null,'Student can discard an active quiz');
 $ok((int)Database::fetchOne('SELECT COUNT(*) c FROM questions WHERE id IN ('.implode(',',array_fill(0,count($exact['question_ids']),'?')).')', $exact['question_ids'])['c']===10,'Discard preserves question-bank rows');
 $takeView=file_get_contents(ROOT_PATH.'/views/student/quizzes/take.php');$builderView=file_get_contents(ROOT_PATH.'/views/student/quizzes/builder.php');
+$ok(str_contains($builderController,'$selectedModuleId')&&substr_count($builderView,'data-module=')>=2&&str_contains($builderView,'$selectedModuleId === (int)$s[\'module_id\']'),'Quiz builder limits subject controls to the selected module');
+$ok(str_contains($builderView,"if(input.type==='checkbox')input.checked=false")&&str_contains($builderView,"else input.value='';"),'Changing modules clears previous subject selections and percentages');
 $ok(strpos($takeView,'Select an answer')!==false&&strpos($takeView,'quiz-discard.php')!==false,'Quiz UI exposes Match placeholder and discard action');
 $ok(strpos($builderView,'Accept and Start Quiz')!==false&&strpos($builderView,'Subject #')===false,'Closest proposal uses subject names and explicit acceptance wording');
 echo "Phase 5 Test Results: $pass Passed, $fail Failed".PHP_EOL;exit($fail?1:0);

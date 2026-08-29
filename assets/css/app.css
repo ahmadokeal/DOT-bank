@@ -489,3 +489,44 @@ a:hover {
         padding: 1.25rem 1rem;
     }
 }
+
+/* Quiz Styles */
+.quiz-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.quiz-header {
+    margin-bottom: 1.5rem;
+}
+
+.quiz-question-text {
+    white-space: pre-wrap;
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+}
+
+.quiz-option-label {
+    display: block;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.quiz-option-label:hover {
+    background-color: var(--primary-light);
+}
+
+.quiz-match-row {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.quiz-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}

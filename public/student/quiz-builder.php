@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/config/config.php';
 Auth::requireStudent();
-$modules=Academic::getAllModules(); $subjects=Academic::getAllSubjects(); $errors=[]; $plan=null;
+$modules=Academic::getAllModules(); $selectedModuleId=(int)($_POST['module_id']??0); $subjects=Academic::getAllSubjects(); $errors=[]; $plan=null;
 if($_SERVER['REQUEST_METHOD']==='POST'){
     if(!CSRF::verify()){ $errors[]='Your form session expired. Please try again.'; }
     elseif(isset($_POST['create_quiz'])){
@@ -17,4 +17,4 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         } else $_SESSION['_quiz_plan']=$plan;
     }
 }
-View::render('student/quizzes/builder',compact('modules','subjects','errors','plan'),'main');
+View::render('student/quizzes/builder',compact('modules','subjects','selectedModuleId','errors','plan'),'main');

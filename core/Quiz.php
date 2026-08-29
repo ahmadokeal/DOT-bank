@@ -25,7 +25,12 @@ class Quiz {
     }
 
     public static function plan(array $input): array {
-        $moduleId=(int)($input['module_id']??0); $subjectIds=array_values(array_unique(array_map('intval', $input['subject_ids']??[])));
+        $moduleId=(int)($input['module_id']??0); 
+        $subjectIdsRaw = $input['subject_ids'] ?? [];
+        if (!is_array($subjectIdsRaw)) {
+            $subjectIdsRaw = [$subjectIdsRaw];
+        }
+        $subjectIds=array_values(array_unique(array_map('intval', $subjectIdsRaw)));
         $total=filter_var($input['total_questions']??null, FILTER_VALIDATE_INT);
         if ($total===false || $total<1) return self::fail('Choose a whole number of at least 1 question.');
         $subjectIds=self::subjectScope($moduleId,$subjectIds);

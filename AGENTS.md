@@ -1,4 +1,4 @@
-# DOT Bank — AI Agent Onboarding & Project Continuity Guide
+﻿# DOT Bank — AI Agent Onboarding & Project Continuity Guide
 
 > **Doctors of Tomorrow Question Bank**  
 > Official Platform Documentation & Source of Truth for Developers and AI Coding Agents.
@@ -14,27 +14,29 @@ The platform transforms previous medical school exam questions (traditionally di
 ```text
 Module (Medical System / Discipline)
  └── Subject (Course / Sub-discipline)
-      └── Questions (MCQ, Match, Complete, Compare, Essay)
+      └── Questions (MCQ, Complete, Match, Compare, Essay)
 ```
 
 ### Core Problems Solved
 - Fragmented past exam questions organized into structured curriculum modules and subjects.
 - Student self-study browsing without taking a test.
 - Deterministic, customizable quiz generation with automated and self-graded feedback.
-- Administrative question curation, manual entry, and external AI JSON imports.
+- Administrative question curation, manual entry, and external JSON imports.
 
 ---
 
 ## 2. Current Project Status
 
-- **Current Active Phase**: **Phase 6 — Grading & Immediate Results** (Completed & Verified; persistent Quiz History removed before Phase 7)
+- **Current Active Phase**: **Pre-Phase 7 Hardening Complete** — All core features implemented through Phase 6. Phase 7 (Polish & UI Optimization) not started.
 - **Phase 1 (Foundation)**: Completed & verified (83/83 automated tests passed).
 - **Phase 2 (Academic Structure)**: Completed & verified (38/38 automated tests passed).
 - **Phase 3 (Question Bank)**: Completed & verified (92/92 automated tests passed).
-- **Phase 4 (JSON Import)**: Completed & verified (13/13 dedicated assertions).
-- **Phase 5 (Quiz Engine)**: Completed & verified (22/22 dedicated assertions).
-- **Phase 6 (Grading & History)**: Completed & verified (14/14 dedicated assertions).
+- **Phase 4 (JSON Import)**: Completed & verified (15/15 dedicated assertions).
+- **Phase 5 (Quiz Engine)**: Completed & verified (27/27 dedicated assertions).
+- **Phase 6 (Grading & Immediate Results)**: Completed & verified (19/19 dedicated assertions; persistent Quiz History removed).
 - **Pre-Phase 7 Hardening**: Completed & verified (29/29 dedicated assertions).
+- **Additional Test Suites**: Exam Appearances (19), Frequency Consistency (18), Deletion Integrity (11), Manual Import Fixture (15).
+- **Total Verified Assertions**: 328+ across all test suites (0 failures).
 
 ---
 
@@ -65,7 +67,9 @@ DOT Bank/
 │   ├── Auth.php              # Session auth, password hashing, rate limiting, route guards
 │   ├── CSRF.php              # Cryptographic CSRF token generation and timing-safe verification
 │   ├── Database.php          # PDO SQLite singleton, WAL mode, foreign keys, transactions
+│   ├── JsonImporter.php      # JSON import parser, validator, preview, transactional import
 │   ├── Question.php          # Question management service (MCQ, Complete, Match, Compare, Essay CRUD & filters)
+│   ├── Quiz.php              # Quiz planning (exact/closest), persistence, submission, grading
 │   └── View.php              # Template rendering engine, layout wrapper, flash messages, escaping
 ├── database/
 │   └── schema.sql            # Full SQLite schema (users, modules, subjects, questions, quizzes, config)
@@ -88,12 +92,18 @@ DOT Bank/
 │   │   ├── questions.php     # Admin question catalog controller
 │   │   ├── question-form.php # Admin create/edit question controller
 │   │   ├── question-view.php # Admin question detail view controller
-│   │   └── question-delete.php# Admin question delete controller
+│   │   ├── question-delete.php# Admin question delete controller
+│   │   └── import.php        # Admin JSON import controller
 │   ├── student/
 │   │   ├── dashboard.php     # Student portal dashboard controller
 │   │   ├── modules.php       # Student curriculum module browser
 │   │   ├── module-view.php   # Student module & subjects reader
-│   │   └── questions.php     # Student question browser controller
+│   │   ├── questions.php     # Student question browser controller
+│   │   ├── quiz-builder.php  # Student quiz builder controller
+│   │   ├── quiz-take.php     # Student quiz taking controller
+│   │   ├── quiz-submit.php   # Student quiz submission controller
+│   │   ├── quiz-result.php   # Student quiz result controller
+│   │   └── quiz-discard.php  # Student active quiz discard controller
 │   ├── index.php             # Public entry point router
 │   ├── login.php             # User login controller
 │   ├── register.php          # Student registration controller
@@ -102,28 +112,52 @@ DOT Bank/
 ├── views/                    # Presentation templates and partials
 │   ├── admin/
 │   │   ├── dashboard.php
+│   │   ├── import.php
 │   │   ├── modules/ (index.php, form.php, delete.php)
 │   │   ├── subjects/ (index.php, form.php, delete.php)
 │   │   └── questions/ (index.php, form.php, view.php, delete.php)
 │   ├── student/
 │   │   ├── dashboard.php
 │   │   ├── modules/ (index.php, view.php)
-│   │   └── questions/ (index.php)
+│   │   ├── questions/ (index.php)
+│   │   └── quizzes/ (builder.php, take.php, result.php)
 │   ├── auth/ (login.php, register.php, setup.php)
 │   ├── layouts/ (main.php, auth.php)
 │   └── partials/ (header.php, nav.php, flash.php, footer.php)
 ├── tests/
 │   ├── phase1_test.php       # Phase 1 Foundation test suite (83 assertions)
 │   ├── phase2_test.php       # Phase 2 Academic Structure test suite (38 assertions)
-│   └── phase3_test.php       # Phase 3 Question Bank test suite (88 assertions)
+│   ├── phase3_test.php       # Phase 3 Question Bank test suite (92 assertions)
+│   ├── phase4_test.php       # Phase 4 JSON Import test suite (15 assertions)
+│   ├── phase5_test.php       # Phase 5 Quiz Engine test suite (27 assertions)
+│   ├── phase6_test.php       # Phase 6 Grading & Results test suite (19 assertions)
+│   ├── pre_phase7_hardening_test.php  # Pre-Phase 7 Hardening test suite (29 assertions)
+│   ├── exam_appearances_test.php      # Exam Appearances CRUD test suite (19 assertions)
+│   ├── frequency_consistency_test.php # Frequency/Appearance sync test suite (18 assertions)
+│   ├── deletion_integrity_test.php    # Academic deletion integrity test suite (11 assertions)
+│   └── manual_import_fixture_test.php # Manual JSON import fixture test suite (15 assertions)
+├── tools/                    # CLI utilities for development & maintenance
+│   ├── seed_demo.php         # Seeds deterministic 300-question demo dataset
+│   ├── reset_demo.php        # Removes demo module and its quizzes
+│   ├── reset_application.php # Full application reset (data + lock file)
+│   ├── migrate_exam_appearances.php  # Migration to canonical exam appearances
+│   ├── repair_frequency_consistency.php # Repairs frequency/appearance sync
+│   ├── clear_quiz_data.php   # Removes all quiz data
+│   └── qa_phase5_demo.php    # Phase 5 QA harness
 ├── assets/                   # Mirrored root assets for standard shared hosting
 ├── admin/                    # Root forwarders to public/admin/ controllers
 │   ├── questions.php
 │   ├── question-form.php
 │   ├── question-view.php
-│   └── question-delete.php
+│   ├── question-delete.php
+│   └── import.php
 ├── student/                  # Root forwarders to public/student/ controllers
-│   └── questions.php
+│   ├── questions.php
+│   ├── quiz-builder.php
+│   ├── quiz-take.php
+│   ├── quiz-submit.php
+│   ├── quiz-result.php
+│   └── quiz-discard.php
 ├── index.php                 # Root forwarder to public/index.php
 ├── setup.php                 # Root forwarder to public/setup.php
 ├── login.php                 # Root forwarder to public/login.php
@@ -167,6 +201,7 @@ DOT Bank/
 - Module validation: name required, 2–100 chars, case-insensitive uniqueness.
 - Subject validation: name required, 2–100 chars, parent module validation, duplicate name prevention within the same module (allowed across different modules).
 - Safe cascading deletion: calculates subject count before deletion and removes child records cleanly inside a transaction.
+- Pre-flight checks for quiz dependencies before module/subject/question deletion (returns controlled error if dependent active quizzes exist).
 
 ### 6. `core/Question.php`
 - Business logic service for question bank management.
@@ -174,8 +209,31 @@ DOT Bank/
 - Validates question text, subject_id, positive frequency, and type-specific rules.
 - Builds and decodes JSON-serialized payload stored in `answer_data` for all supported question types (available and unavailable answer states).
 - Handles creation, updates, and deletion of questions and associated sources transactionally.
+- Multi-criteria filtering (module, subject, type, answer status, search text, exam year, exam term, source name) with pagination.
+- Canonical exam appearances management: `appearances[]` with `source_name` (final/end_module), `exam_year` (integer), `exam_term` (first/second).
+- Frequency synchronization: when exam appearances exist, frequency must equal total recorded appearances; zero-appearance questions retain editable frequency.
+- Duplicate detection via content identity hashing (normalized question text + type-specific answer structure).
 
-### 7. `core/View.php`
+### 7. `core/Quiz.php`
+- Quiz planning service with deterministic algorithms:
+  - **Largest-remainder allocation** for percentage-based distributions.
+  - **Max-flow (Edmonds-Karp)** for exact subject×type matrix feasibility.
+  - **Closest-possible fallback**: greedy single-question allocation minimizing squared deviation from requested subject/type counts, restricted to explicitly requested dimensions.
+- Question selection: Fisher-Yates shuffle using `random_int()` after allocation; duplicate IDs rejected.
+- Quiz persistence: writes `quizzes` and ordered `quiz_questions` in a single transaction.
+- Submission & grading: validates answer formats, auto-grades MCQ (exact option match) and Match (exact mapping match), stores self-graded types with `is_correct = NULL`, calculates objective score (% correct of auto-graded only), marks quiz complete.
+- Transient lifecycle: completed quizzes + answers deleted after result payload prepared; no persistent history.
+- Active quiz discard endpoint (CSRF-protected, student-owned).
+
+### 8. `core/JsonImporter.php`
+- JSON import parser, validator, and transactional importer.
+- External contract: top-level `questions[]` with `type`, `question`, `frequency`, `appearances[]` (source/year/term), `choices`/`answer`/`pairs` per type.
+- Normalizes legacy source strings (e.g., "Final Exam 2025" → `source_name: "final", exam_year: 2025`).
+- Preview workflow: validates, reports invalid records, duplicate candidates, merge/reuse impact, answer availability summary.
+- Transactional import: creates new questions (`answer_origin: 'json_import'`), merges new appearances into existing questions (by content identity), preserves existing answers, populates unavailable answers, records conflicts for review.
+- Frequency consistency enforced: imported `frequency` must equal total stored appearances for that question.
+
+### 9. `core/View.php`
 - Renders view templates within selected layouts (`main` or `auth`).
 - Flash messaging queue (`View::flash('success|error|warning|info', '...')`).
 
@@ -191,13 +249,15 @@ The SQLite database is located at `storage/dot_bank.sqlite`.
 3. `subjects`: `id`, `module_id` (FK $\to$ `modules.id` ON DELETE CASCADE), `name`, `description`, `created_at`, `UNIQUE(module_id, name)`.
 4. `questions`: `id`, `subject_id` (FK $\to$ `subjects.id` ON DELETE CASCADE), `type` (CHECK 'mcq'|'complete'|'match'|'compare'|'essay'), `question_text`, `answer_data` (JSON), `answer_status` (CHECK 'available'|'unavailable'), `answer_origin` (CHECK 'manual'|'json_import'), `frequency` (INTEGER $\ge$ 1), `created_at`, `updated_at`.
 5. `question_sources`: `id`, `question_id` (FK $\to$ `questions.id` ON DELETE CASCADE), `source_name`, `exam_year`, `exam_term`, `created_at`.
-6. `quizzes`: `id`, `user_id` (FK $\to$ `users.id`), `module_id` (FK $\to$ `modules.id`), `total_questions`, `created_at`, `completed_at`, `score`.
-7. `quiz_questions`: `id`, `quiz_id` (FK $\to$ `quizzes.id` ON DELETE CASCADE), `question_id` (FK $\to$ `questions.id`), `question_order`.
-8. `quiz_answers`: `id`, `quiz_question_id` (FK $\to$ `quiz_questions.id` ON DELETE CASCADE), `student_answer`, `is_correct` (INTEGER nullable: 1/0/NULL).
-9. `app_config`: `key` (PRIMARY KEY), `value`, `updated_at`.
+6. `question_conflicts`: `id`, `question_id` (FK $\to$ `questions.id` ON DELETE CASCADE), `incoming_answer_data` (TEXT), `incoming_appearances` (TEXT), `status` (CHECK 'review'|'resolved'), `created_at`.
+7. `quizzes`: `id`, `user_id` (FK $\to$ `users.id`), `module_id` (FK $\to$ `modules.id`), `total_questions`, `created_at`, `completed_at`, `score`.
+8. `quiz_questions`: `id`, `quiz_id` (FK $\to$ `quizzes.id` ON DELETE CASCADE), `question_id` (FK $\to$ `questions.id`), `question_order`.
+9. `quiz_answers`: `id`, `quiz_question_id` (FK $\to$ `quiz_questions.id` ON DELETE CASCADE), `student_answer`, `is_correct` (INTEGER nullable: 1/0/NULL).
+10. `app_config`: `key` (PRIMARY KEY), `value`, `updated_at`.
 
 ### Indexes
 Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `quiz_id`, `user_id`, `quiz_question_id`) and search filters (`type`, `answer_status`, `frequency`).
+- Unique index on `question_sources(question_id, source_name, COALESCE(exam_year, -1), COALESCE(exam_term, ''))` to prevent duplicate exam appearances.
 
 ---
 
@@ -219,23 +279,58 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 
 ## 8. Current Feature Status
 
-### ✅ Implemented (Phases 1, 2 & 3)
+### ✅ Implemented (Phases 1–6 + Pre-Phase 7 Hardening)
+
+**Phase 1 — Foundation**
 - **Initial Setup Wizard**: Database initialization, schema execution, admin account creation, and permanent locking via `installed.lock`.
-- **Authentication**: Session-based login, student registration, secure logout, brute-force rate-limiting, and password hashing.
+- **Authentication**: Session-based login, student registration, secure logout, brute-force rate-limiting (5 attempts/5 min), and password hashing.
+- **Layouts & Helpers**: Medical/Academic design system, flash messaging, CSRF protection, URL generation, HTML escaping.
+
+**Phase 2 — Academic Structure**
 - **Admin Module Management**: List modules with subject counts, create module, edit module, safe deletion with subject cascade warning.
 - **Admin Subject Management**: List subjects, interactive module filter, create subject, edit subject, delete subject.
-- **Question Bank CRUD**: Admin manual question creation, editing, details view, and cascade deletion for exactly 5 question types (MCQ, Complete, Match, Compare, Essay).
-- **Answer Availability**: Handles questions both with answers ("available") and without answers ("unavailable").
-- **Question Sources**: Records optional exam source information (source name, year, term) with cascade delete.
-- **Search & Filters**: Multi-criteria filters (module, subject, type, answer status, and free text search) with pagination.
-- **Student Browsing**: Read-only question browser with interactive "Show / Hide Answer" toggling for students.
-- **Academic/Medical UI System**: Clean, responsive layout with Medical Navy (`#0f4c81`) and Clinical Teal (`#0d9488`), full branding (**DOT Bank — Doctors of Tomorrow Question Bank**), alerts, and user role tags.
+- **Student Curriculum Browser**: Read-only module/subject browsing.
 
-### ⏳ Not Implemented Yet (Upcoming Phases)
-- **Phase 4**: Completed. JSON Import parser, validation, preview workflow, transactional import, and JSON import guide.
-- **Phase 5**: Quiz Engine, constraint validation, deterministic closest possible quiz algorithm, random & high-frequency selection, MCQ shuffling.
-- **Phase 6**: Completed. Grading engine, immediate results review, and transient quiz lifecycle are implemented and verified. Persistent Quiz History is removed.
-- **Phase 7 & 8**: Polish, edge cases, responsive audits, final test suite.
+**Phase 3 — Question Bank**
+- **Question CRUD**: Admin manual question creation, editing, details view, and cascade deletion for exactly 5 question types (MCQ, Complete, Match, Compare, Essay).
+- **Answer Availability**: Handles questions both with answers ("available") and without answers ("unavailable").
+- **Exam Appearances**: Canonical `question_sources` with `source_name` (final/end_module), `exam_year` (integer), `exam_term` (first/second); multiple appearances per question supported.
+- **Frequency Synchronization**: When exam appearances exist, frequency equals total recorded appearances; zero-appearance questions retain editable frequency.
+- **Search & Filters**: Multi-criteria filters (module, subject, type, answer status, exam year, exam term, source name, free text search) with pagination.
+- **Student Browsing**: Read-only question browser with interactive "Show / Hide Answer" toggling for students.
+- **Duplicate Detection**: Content identity hashing warns admin but never silently merges/deletes.
+
+**Phase 4 — JSON Import**
+- **Parser & Validator**: Validates external JSON contract (5 question types, appearances, choices/pairs/answers).
+- **Preview Workflow**: Reports invalid records, duplicate candidates, merge/reuse impact, answer availability summary.
+- **Transactional Import**: Creates new questions (`answer_origin: 'json_import'`), merges appearances into existing questions (by content identity), preserves existing answers, populates unavailable answers, records conflicts in `question_conflicts` for review.
+- **Legacy Normalization**: Accepts legacy source strings (e.g., "Final Exam 2025") for compatibility.
+
+**Phase 5 — Quiz Engine**
+- **Quiz Builder**: Module/subject selection, total questions, optional type/subject percentage distributions.
+- **Planning Algorithms**: Largest-remainder allocation, max-flow (Edmonds-Karp) for exact subject×type matrices, closest-possible fallback with squared-deviation minimization.
+- **Constraints**: Only explicitly entered percentage dimensions are hard constraints; unspecified dimensions remain flexible.
+- **Question Selection**: Fisher-Yates shuffle with `random_int()`; duplicate IDs rejected.
+- **Quiz Taking**: MCQ radio options, Match dropdown mappings, text areas for self-graded types; active quiz discard endpoint.
+- **Persistence**: `quizzes` + `quiz_questions` written in single transaction.
+
+**Phase 6 — Grading & Immediate Results**
+- **Auto-grading**: MCQ (exact option match), Match (exact mapping match).
+- **Self-graded**: Complete, Compare, Essay stored with `is_correct = NULL`.
+- **Scoring**: Objective percentage = (correct / auto-graded) × 100; NULL if no auto-graded questions.
+- **Transient Lifecycle**: Submission prepares result payload, then transactionally removes quiz and answer rows; no persistent history.
+- **Result Review**: Immediate read-only result with per-question correct answers and student responses.
+- **Idempotency**: Existing answer rows make repeat submissions fail safely.
+
+**Pre-Phase 7 Hardening**
+- **Exam Appearances CRUD**: Admin form supports zero/one/multiple appearances with add/remove controls; validation rejects missing/invalid/duplicate rows.
+- **Frequency/Appearance Consistency**: Repair tool and validation enforce frequency = appearance count when appearances exist.
+- **Deletion Integrity**: Pre-flight quiz dependency checks before question/subject/module deletion; controlled error instead of FK violation.
+- **UX Fixes**: Match answer placeholder, "Accept and Start Quiz" wording, subject names in closest previews, improved JSON preview impact reporting, Frequency/Exam Appearance help text.
+
+### ⏳ Not Started
+- **Phase 7**: Polish & UI Optimization (Responsive audits, empty states, security review).
+- **Phase 8**: Final Verification & Delivery.
 
 ---
 
@@ -266,7 +361,8 @@ Future agents MUST adhere to these rules without alteration:
 | **Phase 3** | Question Bank (5 Question Types, Manual Entry, Search/Filter, Student Viewer) | **Completed** |
 | **Phase 4** | JSON Import (Schema Validation, Transactional Import, Import Guide) | **Completed** |
 | **Phase 5** | Quiz Engine (Constraints, Exact & Closest Modes, Shuffling, Interface) | **Completed** |
-| **Phase 6** | Grading & History (Auto/Self Grading, Review, Student History) | **Completed** |
+| **Phase 6** | Grading & Immediate Results (Auto/Self Grading, Review, Transient Lifecycle) | **Completed** |
+| **Pre-Phase 7** | Hardening (Exam Appearances CRUD, Frequency Sync, Deletion Integrity, UX Fixes) | **Completed** |
 | **Phase 7** | Polish & UI Optimization (Responsive audits, empty states, security review) | **Not Started** |
 | **Phase 8** | Final Verification & Delivery | **Not Started** |
 
@@ -284,15 +380,35 @@ Run tests using the XAMPP PHP binary from PowerShell or Command Prompt:
 # Run Phase 2 Academic Structure tests (38 assertions)
 & "D:\xampp\php\php.exe" tests\phase2_test.php
 
-# Run Phase 3 Question Bank tests (88 assertions)
+# Run Phase 3 Question Bank tests (92 assertions)
 & "D:\xampp\php\php.exe" tests\phase3_test.php
+
+# Run Phase 4 JSON Import tests (15 assertions)
+& "D:\xampp\php\php.exe" tests\phase4_test.php
+
+# Run Phase 5 Quiz Engine tests (27 assertions)
+& "D:\xampp\php\php.exe" tests\phase5_test.php
+
+# Run Phase 6 Grading & Results tests (19 assertions)
+& "D:\xampp\php\php.exe" tests\phase6_test.php
+
+# Run Pre-Phase 7 Hardening tests (29 assertions)
+& "D:\xampp\php\php.exe" tests\pre_phase7_hardening_test.php
 ```
 
 ### Verified Test Results
 - **`tests/phase1_test.php`**: **83 Passed, 0 Failed** (Schema integrity, storage security, setup locking, student registration, password hashing, authentication, brute-force rate-limiting, CSRF, and role guards).
 - **`tests/phase2_test.php`**: **38 Passed, 0 Failed** (Module CRUD, duplicate prevention, Subject CRUD, parent module relationships, module filtering, safe cascade deletion, student read-only browsing, admin authorization).
-- **`tests/phase3_test.php`**: **88 Passed, 0 Failed** (Creation of all 5 types [available/unavailable], strict client & server-side validation for MCQ and Match, edit timestamp update and ID preservation, cascade deletion of exam sources, multi-criteria filtering and text search, and student browser details).
-- **Total Assertions**: **209 Passed, 0 Failed**.
+- **`tests/phase3_test.php`**: **92 Passed, 0 Failed** (Creation of all 5 types [available/unavailable], strict client & server-side validation for MCQ and Match, edit timestamp update and ID preservation, cascade deletion of exam sources, multi-criteria filtering and text search, and student browser details).
+- **`tests/phase4_test.php`**: **15 Passed, 0 Failed** (JSON parsing, validation, preview, import, legacy normalization, module-subject scope).
+- **`tests/phase5_test.php`**: **27 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration).
+- **`tests/phase6_test.php`**: **19 Passed, 0 Failed** (Auto/self grading, transient lifecycle, deletion integrity, result review).
+- **`tests/pre_phase7_hardening_test.php`**: **29 Passed, 0 Failed** (Hardening assertions across all prior phases).
+- **`tests/exam_appearances_test.php`**: **19 Passed, 0 Failed** (Exam Appearances CRUD, validation, UI).
+- **`tests/frequency_consistency_test.php`**: **18 Passed, 0 Failed** (Frequency/appearance sync, repair tool).
+- **`tests/deletion_integrity_test.php`**: **11 Passed, 0 Failed** (Academic deletion pre-flight checks).
+- **`tests/manual_import_fixture_test.php`**: **15 Passed, 0 Failed** (Manual JSON import fixture scenarios).
+- **Total Assertions**: **328+ Passed, 0 Failed** across all test suites.
 
 ---
 
@@ -331,6 +447,8 @@ When working on this codebase:
 | [`core/CSRF.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/core/CSRF.php) | CSRF token generator and validator |
 | [`core/Academic.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/core/Academic.php) | Academic hierarchy service (Modules & Subjects CRUD) |
 | [`core/Question.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/core/Question.php) | Question management service (MCQ, Complete, Match, Compare, Essay CRUD & validations) |
+| [`core/Quiz.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/core/Quiz.php) | Quiz planning, persistence, submission, grading service |
+| [`core/JsonImporter.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/core/JsonImporter.php) | JSON import parser, validator, preview, transactional importer |
 | [`core/View.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/core/View.php) | View rendering engine and flash messaging |
 | [`database/schema.sql`](file:///d:/XAMPP/htdocs/DOT%20Bank/database/schema.sql) | Full SQLite DDL schema with foreign keys and indexes |
 | [`storage/.htaccess`](file:///d:/XAMPP/htdocs/DOT%20Bank/storage/.htaccess) | Apache security rule blocking direct downloads of `.sqlite` files |
@@ -343,13 +461,23 @@ When working on this codebase:
 | [`public/admin/question-form.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/admin/question-form.php) | Admin create/edit question controller |
 | [`public/admin/question-view.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/admin/question-view.php) | Admin question details view controller |
 | [`public/admin/question-delete.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/admin/question-delete.php) | Admin question delete controller |
+| [`public/admin/import.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/admin/import.php) | Admin JSON import controller |
 | [`public/student/modules.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/modules.php) | Student academic curriculum browser |
 | [`public/student/questions.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/questions.php) | Student question browser controller |
+| [`public/student/quiz-builder.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/quiz-builder.php) | Student quiz builder controller |
+| [`public/student/quiz-take.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/quiz-take.php) | Student quiz taking controller |
+| [`public/student/quiz-submit.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/quiz-submit.php) | Student quiz submission controller |
+| [`public/student/quiz-result.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/quiz-result.php) | Student quiz result controller |
+| [`public/student/quiz-discard.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/quiz-discard.php) | Student active quiz discard controller |
 | [`views/layouts/main.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/views/layouts/main.php) | Main shared application layout with DOT Bank branding |
 | [`assets/css/app.css`](file:///d:/XAMPP/htdocs/DOT%20Bank/assets/css/app.css) | Medical & Academic Design System stylesheet |
 | [`tests/phase1_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase1_test.php) | Phase 1 Foundation automated test suite |
 | [`tests/phase2_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase2_test.php) | Phase 2 Academic Structure automated test suite |
 | [`tests/phase3_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase3_test.php) | Phase 3 Question Bank automated test suite |
+| [`tests/phase4_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase4_test.php) | Phase 4 JSON Import automated test suite |
+| [`tests/phase5_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase5_test.php) | Phase 5 Quiz Engine automated test suite |
+| [`tests/phase6_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase6_test.php) | Phase 6 Grading & Results automated test suite |
+| [`tests/pre_phase7_hardening_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/pre_phase7_hardening_test.php) | Pre-Phase 7 Hardening test suite |
 
 ---
 
@@ -370,78 +498,54 @@ When working on this codebase:
   - Implemented multi-criteria search and filter queries on the admin and student question lists.
   - Set up student browser allowing read-only access to questions with interactive show/hide toggle behavior for answers.
   - Enforced strict authorization rules (admin-only mutation operations, student role guards).
-  - Verified with 88 new automated test assertions (total 209 assertions, 0 failures).
+  - Verified with 92 new automated test assertions (total 213 assertions, 0 failures).
 - **2026-08-26 — AGENTS.md Created & Maintained**:
   - Established persistent onboarding and continuity documentation for future AI coding agents.
 - **2026-08-27 — Phase 3 Route Recovery**:
   - Audited the repository, reran all phase test suites, and verified all PHP files parse successfully.
   - Corrected the root Question Bank forwarders in `admin/` and `student/`; they now resolve through `dirname(__DIR__)` like the established route forwarders.
   - Confirmed unauthenticated requests to `admin/questions.php` and `student/questions.php` reach the authentication guard and redirect to `login.php` instead of producing missing-file errors.
-  - No database changes were required. Phase 4 remains intentionally unstarted.
+  - No database changes were required.
+- **2026-08-27 — Phase 4 Completed (JSON Import)**:
+  - Added `core/JsonImporter.php`, admin import controller, preview workflow, transactional import.
+  - Legacy source normalization, conflict tracking, frequency consistency.
+  - Verified with 15 dedicated assertions; full regression passed.
+- **2026-08-27 — Phase 5 Completed (Quiz Engine)**:
+  - Added `core/Quiz.php`, student quiz routes (builder, take, submit, discard, result), views, root forwarders.
+  - Largest-remainder allocation, max-flow exact planning, closest-possible fallback with squared-deviation minimization.
+  - Fisher-Yates shuffle with `random_int`; explicit constraints only; flexible unspecified dimensions.
+  - Verified with 27 dedicated assertions; full regression passed.
+- **2026-08-27 — Phase 6 Completed (Grading & Immediate Results)**:
+  - Server-side auto-grading (MCQ, Match), self-graded types (Complete, Compare, Essay), transient lifecycle.
+  - Result review with per-question correct answers; no persistent history.
+  - Quiz History route/view/navigation removed before Phase 7.
+  - Verified with 19 dedicated assertions; full regression passed.
+- **2026-08-27 — Pre-Phase 7 Hardening Completed**:
+  - Exam Appearances CRUD (zero/one/multiple, validation, UI) — 19 assertions.
+  - Frequency/Appearance consistency (repair tool, validation) — 18 assertions.
+  - Deletion integrity (pre-flight quiz dependency checks) — 11 assertions.
+  - Manual Import Fixtures (valid/invalid/merge scenarios) — 15 assertions.
+  - UX Fix Pack (Match placeholder, discard endpoint, closest-plan subject names, "Accept and Start Quiz", JSON preview impact, help text).
+  - Hardening suite: 29 assertions; total regression: 328+ assertions, 0 failures.
+  - All test suites pass in isolated copies.
+- **Phase 7 & 8**: Not started.
 
-## Phase 4 JSON Import
+---
 
-The Admin JSON Import route is available at admin/import.php (with a root forwarder at admin/import.php). It accepts the external questions contract, validates and normalizes records before writing, resolves the selected module and subject, reports invalid records and duplicate candidates in a preview, and imports confirmed valid records in one SQLite transaction. Imported questions receive generated IDs and answer_origin json_import. The guide is included on the import page. No schema changes were required.
+## 16. Technical Risks & Important Implementation Notes
 
-Phase 4 verification: 11/11 dedicated assertions passed. Regression suites passed in an isolated project copy: Phase 1 83/83, Phase 2 38/38, Phase 3 92/92, Phase 4 11/11.
+Future agents should be aware of the following coupling, fragility, and maintenance risks before modifying the codebase:
 
-The Admin import-page guide documents the complete current external JSON contract, including all five question types, unavailable answers, Match pairs, normalization, IDs, invalid examples, and AI-generation instructions.
-
-On 2026-08-27, the final import confirmation bug was fixed by changing the confirmation form to call the existing CSRF::getToken() API. The previous CSRF::token() call prevented the final confirmation request from completing; no database or import-engine changes were required.
-
-## Phase 5 Quiz Engine
-
-Student routes: student/quiz-builder.php, student/quiz-take.php, and student/quiz-submit.php. The Quiz service validates module/subject scope, allocates percentage counts with the largest-remainder method, and checks exact subject/type matrices with deterministic max-flow. If an exact plan cannot be produced, the closest plan maximizes available question count and then selects cells that minimize squared deviation from requested subject and type counts. Question selection happens only after allocation and uses a Fisher-Yates shuffle with random_int; duplicate question IDs are rejected before persistence.
-
-Quiz creation writes quizzes and ordered quiz_questions in one transaction. Phase 6 submission validates answer formats, grades MCQ and Match server-side, stores self-graded types with `is_correct = NULL`, calculates and persists the objective score, and marks the quiz complete in one transaction. No snapshot schema was added because the existing schema references questions directly.
-
-2026-08-27 — Phase 5 completed: added core/Quiz.php, student quiz routes/views, root forwarders, navigation/dashboard links, and tests/phase5_test.php. The dedicated suite passed 14/14 and the live XAMPP exact-quiz flow was verified through generation, persistence, submission, and refresh.
-
-2026-08-27 — Phase 5 QA fix: quiz planning now treats only explicitly entered percentage dimensions as hard constraints. A type-only request (for example 100% Essay) may use an uneven subject split when that is required by actual availability. Added an uneven-subject regression to `tests/phase5_test.php`; final isolated verification passed Phase 1 83/83, Phase 2 38/38, Phase 3 92/92, Phase 4 12/12, and Phase 5 16/16. The deterministic 300-question demo QA harness also passed 27/27 checks.
-
-2026-08-27 — Phase 5 browser QA: a temporary local student completed simple, type-only, subject-only, combined, and closest-possible quiz flows against the seeded demo module. The generated quiz displayed real questions, submitted successfully, and remained retrievable after refresh. SQLite verification found unique question IDs, correct demo-module scope, committed quiz/question rows, and no foreign-key violations. The temporary account and its five quizzes were deleted; the reusable 300-question demo dataset was preserved.
-
-2026-08-27 — Phase 5 builder error-rendering fix: failed `Quiz::plan()` results now clear the success-only plan before rendering, preventing undefined-key warnings in `views/student/quizzes/builder.php`. Regression coverage added; isolated suites remain green.
-
-## Phase 6 Grading & Quiz History
-
-Phase 6 adds `student/quiz-result.php` and `student/quiz-history.php` routes, result/review and history views, and grading in `core/Quiz.php`. MCQ and Match are auto-graded against authoritative stored `answer_data`; exact Match mappings are required for credit, while partial or empty mappings are incorrect/unanswered. Complete, Compare, and Essay remain self-graded and retain `is_correct = NULL`. Questions with unavailable references display `Unavailable`.
-
-`quizzes.score` stores the objective percentage for auto-graded questions only, or NULL when a quiz contains no auto-graded questions. Submission validates ownership, completion state, question membership, answer formats, and CSRF at the route; all answer inserts, grading, score calculation, and completion timestamp are transactional. Existing answer rows make repeat submissions fail safely, providing application-level idempotency without a schema change. Completed quizzes redirect to read-only results and appear in history with All, Completed, and In Progress filters. Result access and history are ownership-scoped.
-
-2026-08-27 — Phase 6 completed and verified: added server-side grading, transactional submission, result review, quiz history, completed-quiz read-only routing, duplicate-submission protection, and `tests/phase6_test.php`. Isolated regression suites passed Phase 1 83/83, Phase 2 38/38, Phase 3 92/92, Phase 4 12/12, Phase 5 18/18, and Phase 6 14/14. Browser QA verified mixed and self-graded quizzes, history after logout/login, unauthorized quiz access denial, and zero browser console warnings/errors. Temporary QA accounts/quizzes were removed; the 300-question demo dataset remained intact. Known limitation: no resume/autosave behavior was added for in-progress quizzes.
-
-## Development Demo Dataset
-
-CLI-only tools/seed_demo.php creates the deterministic DOT Bank Demo Module and five [DEMO] subjects with 300 intentionally uneven Phase 5 questions. tools/reset_demo.php removes only that module and its exclusively-demo quizzes; it refuses to reset if a quiz mixes demo and non-demo questions. The seed refuses to duplicate an existing demo dataset. Use the demo matrix to test exact, impossible, closest, rounding, source, frequency, and unavailable-answer scenarios without changing real academic data.
-
-## Pre-Phase 7 Refactoring & Data Model Hardening
-
-Question browsing is module-centric: public Admin and Student Question Bank routes require a selected module before loading bounded, paginated questions. Subjects are loaded only from that module; there is no default global question/subject listing. Supported filters include subject, type, canonical answer status, integer exam year, first/second term, and multi-select final/end_module source.
-
-question_sources represents individual exam appearances. New canonical records use source_name final or end_module, integer exam_year, and exam_term first or second. Source/year/term filters use one EXISTS predicate so metadata cannot be combined across different appearances. A unique expression index prevents duplicate question/source/year/term appearances. Legacy noncanonical values found in the existing demo data were preserved for auditability during migration and are not accepted by new canonical input paths.
-
-The new JSON contract uses appearances[] with source, year, and term. Legacy source strings are accepted only for compatibility when they are unambiguous; unknown values produce review warnings. Import matching uses normalized question content, including MCQ choices. A different appearance merges into the existing question; repeating an appearance is skipped. Missing answers never erase known answers, an answer can populate an unavailable question, and conflicting answers are retained in question_conflicts for review without overwriting the stored answer. Frequency remains reported metadata and never fabricates appearances.
-
-Migration: tools/migrate_exam_appearances.php safely rebuilt question_sources with integer exam_year, preserved source row IDs and question IDs, retained legacy values that could not be normalized, and created the question_conflicts table and source indexes. Live counts before/after migration were 358 questions, 3 modules, 9 subjects, and 289 question_sources; post-migration duplicate appearances and foreign-key violations were both zero.
-
-Hardening verification: pre_phase7_hardening_test.php passed 29/29; Phase 1 83/83, Phase 2 38/38, Phase 3 92/92, Phase 4 13/13, Phase 5 22/22, and Phase 6 14/14 also passed in isolated copies. Student browser smoke QA verified module-scoped browsing, no unscoped question list, filters, and zero browser console errors. The initial Admin/import click-through was blocked by unavailable credentials and was later completed safely on a protected QA database copy. Temporary QA data was removed and the 300-question demo dataset remained intact. Phase 7 was not started.
-
-2026-08-27 — Pre-Phase 7 Admin & Import Browser QA: the live browser access boundary was checked and a student session was correctly redirected from the Admin Question Bank to login, with zero console errors. Full Admin Question Bank and JSON Import click-through remains blocked because the live admin credential is not available through the project’s setup/testing mechanism. Test-suite credentials belong to isolated databases and were not used against live data; no temporary admin was created because the application’s exactly-one-admin model does not permit a safe temporary account. The previously completed student browser QA and all automated importer/filter/migration coverage remain valid. No application or database changes were made during this QA attempt. Phase 7 was not started.
-
-2026-08-27 — Follow-up Admin & Import browser QA completed on a verified QA database copy. Created one temporary Admin through the normal Setup Wizard, tested module-required Admin browsing, 15-row pagination, Subject/Type/Answer Status/Year/Term filters, Final, End Module, and combined source filters, same-appearance semantics, and multi-appearance detail display. Imported a 12-record canonical JSON fixture through the real UI: preview reported 12 total, 8 valid, 4 invalid, 0 preview duplicate candidates, 6 with answers, and 2 without answers; final import created 4 questions, added 8 appearances, and skipped 1 duplicate appearance. Verified answer preservation, missing-answer population, MCQ choices, multiple appearances, unknown-source review warning, invalid year/term rejection, persistence after Question Bank refresh, and zero browser console errors. The QA copy was discarded and the verified original database/lock file restored. Final live counts are 358 questions, 3 modules, 9 subjects, 289 appearances, 300 demo questions, 0 duplicate appearances, and 0 foreign-key violations; no legitimate users or data were changed. The module-selection issue found during QA was fixed minimally by reloading the Import page with the selected module, covered by a Phase 4 regression assertion, and all suites passed afterward. No application code changes beyond that fix were required. Phase 7 was not started.
-
-2026-08-27 — Phase 5 closest-plan hard-constraint fix: closest possible plans now restrict allocation to explicitly requested question types and subjects. If an explicit type/subject inventory is insufficient, generated_total is reduced rather than filled with unrequested cells. Unspecified dimensions remain flexible. Added regression coverage for 100% MCQ, 100% Essay, MCQ+Match shortage, explicit subject shortage, flexible type, and flexible subject behavior. Phase 5 passed 22/22; browser QA verified a 100-question/100%-MCQ request proposed 45 MCQs and zero other types, Cancel cleared the proposal, Accept created a 45-question MCQ quiz, and refresh preserved it. Temporary student/account quiz data was removed and the live database remained at 358 questions, 3 modules, 9 subjects, 289 appearances, and 300 demo questions. Phase 7 was not started.
-
-2026-08-27 — Exam Appearances UI & CRUD correction: the Admin question form now supports zero, one, or multiple canonical appearances with add/remove controls, and edit mode loads all existing rows. The controller submits the repeatable `appearances[]` payload; `Question::validate()` rejects missing/invalid source, year, term, and duplicate rows, while existing transactional create/update logic replaces appearance rows atomically. Admin detail and Student Question Bank views display all appearances read-only, including an explicit empty state. No schema or JSON contract changes were made. Added `tests/exam_appearances_test.php` with 19 assertions covering CRUD, preservation/removal, validation, rollback, JSON compatibility, detail retrieval, and read-only UI. Isolated verification passed Phase 1 83/83, Phase 2 38/38, Phase 3 92/92, Phase 4 13/13, Phase 5 22/22, Phase 6 14/14, Pre-Phase 7 Hardening 29/29, and Exam Appearances 19/19; all PHP files parsed successfully. Disposable browser QA verified Admin zero/two-row create/edit and duplicate rejection, Student read-only display, and zero console warnings/errors. The original live database was restored unchanged at 358 questions, 3 modules, 9 subjects, 289 appearances, 300 demo questions, and 0 foreign-key violations. Phase 7 was not started.
-
-2026-08-27 — Frequency & Exam Appearance consistency correction: Frequency is independently maintained when a question has no recorded Exam Appearances. When one or more Exam Appearances are recorded, frequency must equal the total number of recorded appearances. Admin add/remove controls synchronize frequency once appearances exist; zero-appearance questions retain editable frequency. Server-side CRUD and JSON preview/import validation reject contradictory values, and importer merge validation uses the total stored appearance set; legitimate existing appearances are preserved and merged rows update frequency deterministically. Added `tests/frequency_consistency_test.php` with 18 assertions and `tools/repair_frequency_consistency.php`. Live audit found 248 inconsistent records; the repair changed only their frequency values to existing appearance counts, preserving question and appearance IDs/data. Post-repair live audit: 0 inconsistent records, 0 foreign-key violations, 360 questions, 292 appearances, and 300 demo questions. Full isolated regression total was 328 passed assertions: Phase 1 83, Phase 2 38, Phase 3 92, Phase 4 13, Phase 5 22, Phase 6 14, Pre-Phase 7 Hardening 29, Exam Appearances 19, Frequency Consistency 18. Disposable browser QA covered Admin synchronization and JSON valid/invalid preview/import; no browser console errors or unexpected warnings were observed. Temporary accounts, database copies, and fixtures were removed. Phase 7 was NOT started.
-
-2026-08-27 — Manual JSON QA fixtures: added `tools/qa/manual_import_scenarios.json` with 33 valid, marked records covering all five supported question types, answer availability, pagination/filter data, zero/one/multiple canonical appearances, frequency variants, and exact-duplicate data. Added `tools/qa/manual_import_merge_scenarios.json` for controlled sequential new-appearance/repeated-appearance merge checks, `tools/qa/manual_import_invalid_scenarios.json` with 21 invalid records, `tools/qa/manual_import_invalid_missing_questions.json` for the separate top-level structure failure, and the concise human test map `tools/qa/MANUAL_IMPORT_SCENARIOS.md`. Disposable-database verification accepted all 33 main records, imported them as 31 questions with no duplicate appearance rows, verified the separate merge fixture, and rejected all 21 invalid records; the missing-questions fixture failed with the expected top-level error. No production import or database change was made. Phase 7 was NOT started.
-2026-08-27 — Academic deletion integrity fix: question, subject, and module deletion now preflight quiz dependencies and return a controlled protected-history error instead of attempting a cascade that violates `quiz_questions.question_id ON DELETE RESTRICT`. Deletions without quiz dependencies remain transactional and use the existing source/subject/question cascades; unexpected database failures are caught, logged, and rolled back. Added `tests/deletion_integrity_test.php` covering answered quiz dependencies, preservation on rejection, successful deletion after dependency removal, and foreign-key checks. Phase 7 was NOT started.
-2026-08-27 — Quiz History removal before Phase 7: persistent history route, view, navigation, and service methods were removed. The active quiz tables remain transiently required for generation, taking, submission, grading, and immediate result review; submission prepares the complete result payload, then transactionally removes the quiz and answer rows. Refreshing the result URL no longer reopens a completed quiz. A protected SQLite backup was created before removing 6 completed quiz rows; 1 active quiz was preserved. Final live counts are 361 questions, 3 modules, 9 subjects, 294 appearances, 1 active quiz, 0 completed quizzes, and 0 foreign-key violations. Updated Phase 6 to 19/19 and added transient-lifecycle/deletion coverage. Full isolated regression suites passed: Phase 1 83, Phase 2 38, Phase 3 92, Phase 4 13, Phase 5 22, Phase 6 19, Hardening 29, Exam Appearances 19, Frequency Consistency 18, Manual Import Fixture 15, Deletion Integrity 11. Browser QA reached the disposable login page, but the in-app browser session exposed an empty CSRF field; the disposable instance was discarded without changing CSRF or production application behavior. Phase 7 was NOT started.
-2026-08-27 — Retry browser QA: a fresh disposable installation confirmed the application response contains a populated CSRF token and `Set-Cookie`, while the in-app browser DOM exposed the hidden CSRF value as empty; browser submission therefore stopped at the login guard. This is a browser-harness/session integration limitation, not evidence of an application CSRF defect. CSRF protection was not weakened or changed, no production data was used for browser QA, and the disposable installation was discarded. Phase 7 was NOT started.
-2026-08-27 — Full-access browser QA retry: a new clean disposable installation reached the real Setup Wizard through the in-app browser, but its hidden CSRF input again rendered empty even though a direct request to the same disposable server returned a populated token and session cookie. The browser could not submit the setup/login form, so Student and Admin UI flows could not be exercised. No application code or CSRF behavior was changed; the disposable server, database, credentials, and artifacts were removed. This remains an in-app browser session/DOM bridge limitation, not an application defect. Phase 7 was NOT started.
-2026-08-27 — Quiz data cleanup: at the user’s explicit request, created `tools/clear_quiz_data.php` and backed up the live SQLite database before removing the remaining 1 active quiz. Quiz, quiz-question, and quiz-answer counts are now all zero; modules, subjects, questions, and appearances were preserved, and `PRAGMA foreign_key_check` reports zero violations. Phase 7 was NOT started.
-2026-08-27 — Full application reset: at the user’s explicit request, created `tools/reset_application.php`, backed up the SQLite database, cleared all application data records, reset SQLite sequences, and removed `storage/installed.lock`. The database now has zero users, modules, subjects, questions, appearances, conflicts, quizzes, answers, and foreign-key violations; the Setup Wizard is available for a fresh start. Application code and schema were preserved. Phase 7 was NOT started.
-2026-08-27 — Pre-Phase 7 UX Fix Pack: added a selected placeholder for Match answers and normalized an untouched Match submission to an empty unanswered mapping; added the CSRF-protected student-owned active-quiz discard endpoint and root forwarder; closest-plan previews now show subject names and use “Accept and Start Quiz”; JSON previews now report actual new-row, merge/reuse, duplicate-appearance, invalid, and warning impacts; and Frequency/Exam Appearance help text now explains the synchronization rule. No schema, planner rules, JSON contract, authentication, or business-rule changes were made. Phase 4 passed 15/15, Phase 5 passed 27/27, Phase 6 passed 19/19, and the complete hardening set passed with no failures. Disposable browser QA verified the Match placeholder, discard redirect, and zero console errors. Phase 7 was NOT started.
+| Area | Risk | Mitigation |
+|------|------|------------|
+| **`Question::validate()`** (`core/Question.php:63-159`) | 100+ lines handling 5 question types + appearances; changes risk regressions across all types | Run full Phase 3 + Phase 4 + Phase 6 test suites after any modification |
+| **`Quiz::plan()`** (`core/Quiz.php:27-211`) | Max-flow, closest-matrix, largest-remainder all in one class; complex edge cases | Run Phase 5 tests; test uneven subject splits, shortage scenarios, flexible dimensions |
+| **`JsonImporter::import()`** (`core/JsonImporter.php:15-74`) | Identity hashing, conflict table, appearance deduplication, frequency validation tightly coupled | Run Phase 4 + manual import fixture tests; verify merge/reuse/conflict scenarios |
+| **Client-side form JS** (`views/admin/questions/form.php:167-527`) | 360+ lines of inline JS for dynamic MCQ/Match/appearance builders; no separation | Keep changes minimal; test all 5 question types in create/edit modes |
+| **Question Bank query builder** (`core/Question.php:13-58`) | Raw SQL string concatenation for filters; subtle bugs possible with new filters | Run Phase 3 + Phase 4 filter tests; verify pagination and all filter combinations |
+| **Session-dependent CSRF in tests** | CLI tests manipulate `$_SESSION` directly; real browser session behavior may differ | Verify CSRF behavior manually in browser for state-changing endpoints |
+| **Deletion pre-flight checks** (`core/Academic.php:128-160, 316-360`) | `countDependentQuizzesForModule/Subject` queries must stay in sync with schema | Run deletion integrity tests; verify FK behavior after schema changes |
+| **Frequency/appearance sync** (`core/Question.php:149-156, 187-189, 268, 361`) | Dual code paths (create/update) must maintain invariant; repair tool exists indicating fragility | Run frequency consistency tests; use repair tool after bulk operations |
+| **Quiz result session payload** (`public/student/quiz-submit.php:7`, `quiz-result.php:6-8`) | Uses `$_SESSION['_quiz_result_payload']` — single-tab assumption, no persistence | Do not rely on result surviving tab close/refresh; transient by design |
+| **Hardcoded 15-row pagination** | Not configurable; changing requires multi-file edit (admin/questions, student/questions, import) | Consider centralizing if pagination changes needed |
+| **Root forwarder pattern** | All root-level PHP files forward to `public/` via `dirname(__DIR__)`; maintain consistency | Add new routes in both `public/` and root forwarders |

@@ -125,7 +125,7 @@
 
                     <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
                         <strong>Exam appearances:</strong>
-                        <?php if (!empty($q['appearances'])): ?><ul style="margin:.25rem 0 0;padding-left:1.1rem"><?php foreach ($q['appearances'] as $appearance): ?><li><?= e(ucwords(str_replace('_',' ',$appearance['source_name']))) ?> — <?= e(ucwords($appearance['exam_term'])) ?> Term <?= (int)$appearance['exam_year'] ?></li><?php endforeach; ?></ul><?php else: ?><span>No exam appearances recorded.</span><?php endif; ?>
+                        <?php if (!empty($q['appearances'])): ?><ul style="margin:.25rem 0 0;padding-left:1.1rem"><?php foreach ($q['appearances'] as $appearance): ?><li><?= e(ucwords(str_replace('_',' ',$appearance['source_name']))) ?> — <?= e(ucwords($appearance['exam_term'] ?? '')) ?> Term <?= (int)($appearance['exam_year'] ?? 0) ?></li><?php endforeach; ?></ul><?php else: ?><span>No exam appearances recorded.</span><?php endif; ?>
                     </div>
 
                     <!-- Answer reveal drawer -->
