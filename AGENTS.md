@@ -532,7 +532,21 @@ When working on this codebase:
 
 ---
 
-## 16. Technical Risks & Important Implementation Notes
+## 16. Phase 7 Branching & Development Protocol
+
+| Rule | Detail |
+|------|--------|
+| **Development Branch** | Phase 7 development happens on the `phase7` branch. |
+| **Production Branch** | `main` is the stable/production branch and must NOT receive direct Phase 7 development commits. |
+| **Testing** | All Phase 7 changes must be tested (automated + browser QA) before merging. |
+| **Push Policy** | Push `phase7` work to the remote `phase7` branch only. Never push Phase 7 commits to `main`. |
+| **Merge Policy** | `main` receives Phase 7 only after review, full regression testing, browser QA, and explicit approval. |
+| **Deployment** | Do not deploy Phase 7 to live hosting until it passes all required verification on `main`. |
+| **Rollback Point** | Commit `20b906f` (`chore: finalize pre-phase7 baseline`) on `main` is the stable rollback point. |
+
+---
+
+## 17. Technical Risks & Important Implementation Notes
 
 Future agents should be aware of the following coupling, fragility, and maintenance risks before modifying the codebase:
 
