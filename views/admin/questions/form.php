@@ -51,6 +51,7 @@
                         <option value="match" <?= ($type === 'match') ? 'selected' : '' ?>>Match</option>
                         <option value="compare" <?= ($type === 'compare') ? 'selected' : '' ?>>Compare</option>
                         <option value="essay" <?= ($type === 'essay') ? 'selected' : '' ?>>Essay</option>
+                        <option value="true_false" <?= ($type === 'true_false') ? 'selected' : '' ?>>True / False</option>
                     </select>
                 </div>
 
@@ -80,6 +81,13 @@
                     <label class="form-label" for="answer">Correct / Model Answer</label>
                     <textarea id="answer" name="answer" class="form-control" rows="4" placeholder="Enter model answer here..."><?= e($plainAnswer) ?></textarea>
                 </div>
+            </div>
+
+            <!-- True / False answer container -->
+            <div id="answer-container-true-false" class="card type-container" style="background: var(--bg-page); display: none;">
+                <h4 style="margin-bottom: 0.75rem;">True / False Configuration</h4>
+                <label style="display: block; margin-bottom: 0.5rem;"><input type="radio" name="answer" value="true" <?= ($plainAnswer === 'true') ? 'checked' : '' ?>> True</label>
+                <label style="display: block;"><input type="radio" name="answer" value="false" <?= ($plainAnswer === 'false') ? 'checked' : '' ?>> False</label>
             </div>
 
             <!-- MCQ Options container -->
@@ -230,10 +238,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         };
+        document.querySelectorAll('.type-container').forEach(c => setInputsState(c, true));
 
         if (type === 'mcq') {
             const container = document.getElementById('answer-container-mcq');
             container.style.display = '';
+            setInputsState(container, false);
             
             // In MCQ, options are always needed even if correct answer is not defined/unavailable.
             // But Correct Answer selector (checkbox/radio/select) will be hidden/disabled if status is unavailable.
@@ -246,6 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'match') {
             const container = document.getElementById('answer-container-match');
             container.style.display = '';
+            setInputsState(container, false);
+            if (status !== 'available') container.querySelectorAll('#matches-mapping-wrapper select').forEach(sel => { sel.disabled = true; });
             
             // Left/right lists are always available. The actual correct mapping block is toggled.
             const mappingWrapper = document.getElementById('matches-mapping-wrapper').parentNode;
@@ -254,6 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 sel.disabled = (status !== 'available');
             });
 
+        } else if (type === 'true_false') {
+            const container = document.getElementById('answer-container-true-false');
+            container.style.display = '';
+            setInputsState(container, status !== 'available');
+            container.querySelectorAll('input[name="answer"]').forEach(input => {
+                input.disabled = status !== 'available';
+                input.required = status === 'available';
+            });
+            document.getElementById('answer').disabled = true;
+            document.getElementById('answer').required = false;
         } else {
             // complete, compare, essay
             const container = document.getElementById('answer-container-text');
@@ -266,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('answer').disabled = true;
                 document.getElementById('answer').required = false;
             }
+            document.getElementById('answer-container-true-false').querySelectorAll('input[name="answer"]').forEach(input => { input.disabled = true; input.required = false; });
         }
     };
 

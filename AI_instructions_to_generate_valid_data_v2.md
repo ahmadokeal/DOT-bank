@@ -18,12 +18,12 @@ These are the exact backend literals. Display labels in the admin UI are shown a
 
 | Field | VALID: exact submitted/backend values | UI display labels | INVALID examples proved by implementation |
 |---|---|---|---|
-| `type` | `mcq`, `complete`, `match`, `compare`, `essay` | Multiple Choice (MCQ), Complete, Match, Compare, Essay | `MCQ`, `multiple_choice`, `fill_blank`, `matching`, `short_answer` |
+| `type` | `mcq`, `complete`, `match`, `compare`, `essay`, `true_false` | Multiple Choice (MCQ), Complete, Match, Compare, Essay, True / False | `MCQ`, `multiple_choice`, `fill_blank`, `matching`, `short_answer` |
 | question `answer_status` (internal, derived) | `available`, `unavailable` | Answer Available, Answer Unavailable | `answered`, `unanswered`, `pending` |
 | appearance `source` / normalized `source_name` | `final`, `end_module` | Final, End Module | `Final`, `final_exam`, `End Module`, `End of module`, `midterm` as a canonical source |
 | appearance `term` / normalized `exam_term` | `first`, `second` | First, Second | `First`, `second_term`, `third` |
 | `answer_origin` (internal, derived on import) | `json_import` | none | `manual`, `AI`, `generated` for imported rows |
-| `questions.type` (database) | `mcq`, `complete`, `match`, `compare`, `essay` | same labels as above | any other literal; rejected by validation/DB CHECK |
+| `questions.type` (database) | `mcq`, `complete`, `match`, `compare`, `essay`, `true_false` | same labels as above | any other literal; rejected by validation/DB CHECK |
 | database `question_conflicts.status` (internal) | `review`, `resolved` | none | any other status |
 
 For JSON appearances, use the external keys `source`, `year`, and `term`. The importer also accepts the aliases `source_name`, `exam_year`, and `exam_term` inside an appearance object, but the canonical generation format is `source`, `year`, `term`.
@@ -34,7 +34,7 @@ Each element of `questions` must be an object.
 
 | JSON key | Type | Required / default | Exact rules | Verified in |
 |---|---|---|---|---|
-| `type` | string | required | Exactly one of the five `type` literals above; case-sensitive | `core/JsonImporter.php`, `JsonImporter::normalize()`; `core/Question.php`, `Question::validate()` |
+| `type` | string | required | Exactly one of the six `type` literals above; case-sensitive | `core/JsonImporter.php`, `JsonImporter::normalize()`; `core/Question.php`, `Question::validate()` |
 | `question` | string | required | After trimming, must be non-empty | `core/JsonImporter.php`, `JsonImporter::normalize()` |
 | `frequency` | integer JSON number | optional; defaults to `1` only when omitted | Must be an actual JSON integer (`is_int`), and `>= 1`. `"1"`, `1.0`, `0`, and `null` are not valid importer values | `core/JsonImporter.php`, `JsonImporter::normalize()`; `database/schema.sql`, `questions.frequency` |
 | `appearances` | array | optional; defaults to `[]` when omitted | Prefer this key. Every strict appearance must be a valid object as specified in §5. If the key is present, it must be an array | `core/JsonImporter.php`, `JsonImporter::appearances()` |
@@ -100,7 +100,7 @@ Rules:
 
 ### 4.3 Complete, Compare, and Essay
 
-For each of these types, use the same external shape:
+For each of the text-based types, use the same external shape:
 
 ```json
 {
@@ -117,6 +117,18 @@ For each of these types, use the same external shape:
 - Omit `answer`, or set it to `null` or `""`, for an unavailable answer. It stores internal `answer_status = "unavailable"` and `answer_data = {"answer":null}`.
 - When an answer is present it must be convertible to trimmed text by the importer; generate a string to avoid ambiguity.
 - These three types are self-graded in the quiz engine: `is_correct` remains `NULL`; the platform does not AI-grade or fuzzy-match them (`core/Quiz.php`, `Quiz::submit()`).
+
+### 4.4 True / False
+
+External format:
+
+```json
+{"type":"true_false","question":"The heart has four chambers.","answer":true,"frequency":1,"appearances":[]}
+```
+
+- `answer` must be a real JSON boolean (`true` or `false`), not the strings `"true"` or `"false"`.
+- Omit `answer` or set it to `null` for an unavailable answer.
+- Available answers are normalized to internal `answer_data = {"answer":"true"}` or `{"answer":"false"}` and are auto-graded in quizzes.
 
 ## 5. Exam appearances and frequency
 
@@ -167,7 +179,7 @@ The database also enforces `questions.type`, `answer_status`, `answer_origin`, a
 
 ## 8. Complete verified JSON example
 
-This example uses only the strict external keys and covers all five types, available and unavailable answers, zero/single/multiple appearances, canonical sources, canonical terms, and valid frequency counts. It is intended to be passed unchanged to `JsonImporter::parse($json, $selectedModuleId, $selectedSubjectId)` after selecting a subject belonging to the selected module.
+This example uses only the strict external keys and covers all six types, available and unavailable answers, zero/single/multiple appearances, canonical sources, canonical terms, and valid frequency counts. It is intended to be passed unchanged to `JsonImporter::parse($json, $selectedModuleId, $selectedSubjectId)` after selecting a subject belonging to the selected module.
 
 ```json
 {
@@ -242,5 +254,5 @@ The example yields five valid normalized records: four with available answers an
 - `public/admin/question-form.php`: POST field names and controller mapping.
 - `views/admin/questions/form.php`: UI display labels and submitted values for types, answer status, sources, terms, and year `min="1900" max="2200"`.
 - `views/admin/import.php`: user-facing JSON guide and module/subject selection outside the file.
-- `core/Quiz.php`: objective grading for MCQ/Match and self-graded handling for Complete/Compare/Essay.
+- `core/Quiz.php`: objective grading for MCQ/Match/True / False and self-graded handling for Complete/Compare/Essay.
 - `tests/phase3_test.php`, `tests/phase4_test.php`, `tests/phase6_test.php`, `tests/pre_phase7_hardening_test.php`, `tests/exam_appearances_test.php`, `tests/frequency_consistency_test.php`, and `tests/manual_import_fixture_test.php`: validation, import, appearance, frequency, duplicate, and grading regression coverage.

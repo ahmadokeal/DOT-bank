@@ -46,7 +46,7 @@ class Question {
         $where=[];$params=[];
         if(($filters['module_id']??'')!==''){$where[]='s.module_id=?';$params[]=(int)$filters['module_id'];}
         if(($filters['subject_id']??'')!==''){$where[]='q.subject_id=?';$params[]=(int)$filters['subject_id'];}
-        if(in_array(($filters['type']??''),['mcq','complete','match','compare','essay'],true)){$where[]='q.type=?';$params[]=$filters['type'];}
+        if(in_array(($filters['type']??''),['mcq','complete','match','compare','essay','true_false'],true)){$where[]='q.type=?';$params[]=$filters['type'];}
         if(in_array(($filters['answer_status']??''),['available','unavailable'],true)){$where[]='q.answer_status=?';$params[]=$filters['answer_status'];}
         if(($filters['search']??'')!==''){$v='%'.trim((string)$filters['search']).'%';$where[]='(q.question_text LIKE ? OR q.answer_data LIKE ? OR EXISTS (SELECT 1 FROM question_sources qss WHERE qss.question_id=q.id AND qss.source_name LIKE ?))';array_push($params,$v,$v,$v);}
         $source=$filters['source_names']??[];if(is_string($source))$source=[$source];$source=array_values(array_intersect((array)$source,['final','end_module']));
@@ -74,7 +74,7 @@ class Question {
         }
 
         $type = $data['type'] ?? '';
-        $allowedTypes = ['mcq', 'complete', 'match', 'compare', 'essay'];
+        $allowedTypes = ['mcq', 'complete', 'match', 'compare', 'essay', 'true_false'];
         if (empty($type) || !in_array($type, $allowedTypes, true)) {
             $errors[] = 'Valid question type is required.';
         }
@@ -136,6 +136,11 @@ class Question {
                             $errors[] = "Match value \"{$rItem}\" is not present in the right items list.";
                         }
                     }
+                }
+            } elseif ($type === 'true_false') {
+                $answer = strtolower(trim((string)($data['answer'] ?? '')));
+                if (!in_array($answer, ['true', 'false'], true)) {
+                    $errors[] = 'True/False answer must be true or false.';
                 }
             } else {
                 // complete, compare, essay
@@ -226,6 +231,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => $matches
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => strtolower(trim((string)($data['answer'] ?? '')))]);
                 } else {
                     $answerData = json_encode([
                         'answer' => trim($data['answer'] ?? '')
@@ -247,6 +254,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => null
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => null]);
                 } else {
                     $answerData = json_encode([
                         'answer' => null
@@ -321,6 +330,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => $matches
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => strtolower(trim((string)($data['answer'] ?? '')))]);
                 } else {
                     $answerData = json_encode([
                         'answer' => trim($data['answer'] ?? '')
@@ -341,6 +352,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => null
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => null]);
                 } else {
                     $answerData = json_encode([
                         'answer' => null

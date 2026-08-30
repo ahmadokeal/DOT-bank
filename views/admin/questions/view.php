@@ -54,7 +54,9 @@
                         $type = $question['type'];
                         ?>
                         
-                        <?php if ($type === 'mcq'): ?>
+                        <?php if ($type === 'true_false'): ?>
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Correct Answer:</p><div style="padding: 1rem; background: var(--success-bg); border: 1px solid var(--success-border); border-radius: var(--radius-sm); color: #14532d; font-weight: 700;"><?= e(ucfirst((string)($decoded['answer'] ?? ''))) ?></div>
+                        <?php elseif ($type === 'mcq'): ?>
                             <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Options:</p>
                             <ul style="list-style: none; margin-bottom: 1rem; padding-left: 0;">
                                 <?php foreach ($decoded['options'] ?? [] as $idx => $opt): 

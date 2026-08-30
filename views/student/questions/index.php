@@ -41,6 +41,7 @@
                     <option value="match" <?= ($filters['type'] === 'match') ? 'selected' : '' ?>>Matching</option>
                     <option value="compare" <?= ($filters['type'] === 'compare') ? 'selected' : '' ?>>Compare</option>
                     <option value="essay" <?= ($filters['type'] === 'essay') ? 'selected' : '' ?>>Essay</option>
+                    <option value="true_false" <?= ($filters['type'] === 'true_false') ? 'selected' : '' ?>>True / False</option>
                 </select>
             </div>
 
@@ -94,7 +95,9 @@
                     <div style="font-size: 1.05rem; font-weight: 600; color: var(--dark); margin-bottom: 1.25rem; white-space: pre-wrap; line-height: 1.5;"><?= e($q['question_text']) ?></div>
 
                     <!-- Type Specific Renderings -->
-                    <?php if ($type === 'mcq' && !empty($decoded['options'])): ?>
+                    <?php if ($type === 'true_false'): ?>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; max-width: 600px;"><div style="padding: 0.6rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #ffffff;">True</div><div style="padding: 0.6rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #ffffff;">False</div></div>
+                    <?php elseif ($type === 'mcq' && !empty($decoded['options'])): ?>
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; max-width: 600px;">
                             <?php foreach ($decoded['options'] as $oIdx => $opt): ?>
                                 <div style="padding: 0.6rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #ffffff;">
@@ -142,7 +145,9 @@
                             <div class="answer-drawer" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: var(--radius-sm); background-color: var(--success-bg); border: 1px solid var(--success-border); color: #14532d;">
                                 <strong style="display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--success); margin-bottom: 0.35rem;">Correct Answer Definition:</strong>
                                 
-                                <?php if ($type === 'mcq'): ?>
+                                <?php if ($type === 'true_false'): ?>
+                                    <div style="font-weight: 700; font-size: 1.05rem;">Correct Answer: <?= e(ucfirst((string)$decoded['answer'])) ?></div>
+                                <?php elseif ($type === 'mcq'): ?>
                                     <div style="font-weight: 700; font-size: 1.05rem;">
                                         Correct Option: <?= e($decoded['correct_answer']) ?>
                                     </div>

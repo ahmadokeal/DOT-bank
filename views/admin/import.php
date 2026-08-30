@@ -13,6 +13,7 @@
 <h3>Match</h3><pre>{"type":"match","question":"Match each structure with its function.","pairs":[{"left":"A","right":"Nephron"},{"left":"B","right":"Alveolus"}],"answer":"provided","frequency":1,"appearances":[{"source":"end_module","year":2025,"term":"second"}]}</pre>
 <h3>Compare</h3><pre>{"type":"compare","question":"Compare arteries and veins.","answer":"Arteries carry blood away; veins return blood.","frequency":1,"appearances":[]}</pre>
 <h3>Essay</h3><pre>{"type":"essay","question":"Discuss homeostasis.","frequency":1,"appearances":[]}</pre>
+<h3>True / False</h3><pre>{"type":"true_false","question":"The heart has four chambers.","answer":true,"frequency":1,"appearances":[]}</pre>
 <h3>Duplicates and review</h3><p>Matching question content with a different appearance reuses one question and adds an appearance. Repeating the same appearance is skipped. MCQ identity includes normalized question text and choices. A choice/answer conflict is retained for Admin review and never silently overwrites the stored answer. Unsupported sources or terms are shown as review warnings and are not canonical filters. Legacy <code>source</code> strings are accepted only when unambiguous; the appearances array is preferred.</p></div>
 <style>.json-import-guide{min-width:0;max-width:100%;box-sizing:border-box}.json-import-guide pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-width:100%;box-sizing:border-box}</style>
 <?php endif;?></div>

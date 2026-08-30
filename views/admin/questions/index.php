@@ -6,7 +6,7 @@
         </div>
         <div>
             <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary">
-                <span>+ Add Question</span>
+                <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Question</span>
             </a>
         </div>
     </div>
@@ -58,6 +58,7 @@
                         <option value="match" <?= ($filters['type'] === 'match') ? 'selected' : '' ?>>Match</option>
                         <option value="compare" <?= ($filters['type'] === 'compare') ? 'selected' : '' ?>>Compare</option>
                         <option value="essay" <?= ($filters['type'] === 'essay') ? 'selected' : '' ?>>Essay</option>
+                        <option value="true_false" <?= ($filters['type'] === 'true_false') ? 'selected' : '' ?>>True / False</option>
                     </select>
                 </div>
 
@@ -87,8 +88,8 @@
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.5rem; align-items: center; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.25rem;">
-                <a href="<?= url('admin/questions.php') ?>" class="btn btn-secondary btn-sm">Reset Filters</a>
-                <button type="submit" class="btn btn-primary btn-sm">Apply Filters / Search</button>
+                <a href="<?= url('admin/questions.php') ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i><span>Reset Filters</span></a>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Apply Filters / Search</span></button>
             </div>
         </form>
     </div>
@@ -154,9 +155,9 @@
                                     <?php endif; ?>
                                 </td>
                                 <td style="padding: 1rem 1.25rem; vertical-align: top; text-align: right; white-space: nowrap;">
-                                    <a href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">View</a>
-                                    <a href="<?= url('admin/question-form.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">Edit</a>
-                                    <a href="<?= url('admin/question-delete.php?id=' . (int)$q['id']) ?>" class="btn btn-sm" style="background-color: var(--error-bg); color: var(--error); border-color: var(--error-border);">Delete</a>
+                                    <a href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;"><i class="fa-solid fa-eye" aria-hidden="true"></i><span>View</span></a>
+                                    <a href="<?= url('admin/question-form.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;"><i class="fa-solid fa-pen" aria-hidden="true"></i><span>Edit</span></a>
+                                    <a href="<?= url('admin/question-delete.php?id=' . (int)$q['id']) ?>" class="btn btn-sm" style="background-color: var(--error-bg); color: var(--error); border-color: var(--error-border);"><i class="fa-solid fa-trash" aria-hidden="true"></i><span>Delete</span></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

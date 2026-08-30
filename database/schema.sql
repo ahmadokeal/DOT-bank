@@ -33,13 +33,13 @@ CREATE TABLE IF NOT EXISTS subjects (
 );
 
 -- Questions table
--- Types: 'mcq', 'complete', 'match', 'compare', 'essay'
+-- Types: 'mcq', 'complete', 'match', 'compare', 'essay', 'true_false'
 -- answer_status: 'available', 'unavailable'
 -- answer_origin: 'manual', 'json_import'
 CREATE TABLE IF NOT EXISTS questions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subject_id INTEGER NOT NULL,
-    type TEXT NOT NULL CHECK(type IN ('mcq', 'complete', 'match', 'compare', 'essay')),
+    type TEXT NOT NULL CHECK(type IN ('mcq', 'complete', 'match', 'compare', 'essay', 'true_false')),
     question_text TEXT NOT NULL,
     answer_data TEXT, -- JSON structured according to question type
     answer_status TEXT NOT NULL DEFAULT 'available' CHECK(answer_status IN ('available', 'unavailable')),

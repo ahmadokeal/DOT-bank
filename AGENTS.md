@@ -14,7 +14,7 @@ The platform transforms previous medical school exam questions (traditionally di
 ```text
 Module (Medical System / Discipline)
  └── Subject (Course / Sub-discipline)
-      └── Questions (MCQ, Complete, Match, Compare, Essay)
+      └── Questions (MCQ, Complete, Match, Compare, Essay, True / False)
 ```
 
 ### Core Problems Solved
@@ -27,7 +27,7 @@ Module (Medical System / Discipline)
 
 ## 2. Current Project Status
 
-- **Current Active Phase**: **Phase 7 In Progress** — Bootstrap integration, Global UI Foundation, and test database isolation are complete.
+- **Current Active Phase**: **Phase 7 In Progress** — Vanilla CSS foundation, responsive Navbar, Core UI redesign, and Font Awesome enhancement are complete; quiz screens remain a separate UI pass.
 - **Phase 1 (Foundation)**: Completed & verified (83/83 automated tests passed).
 - **Phase 2 (Academic Structure)**: Completed & verified (38/38 automated tests passed).
 - **Phase 3 (Question Bank)**: Completed & verified (92/92 automated tests passed).
@@ -44,7 +44,7 @@ Module (Medical System / Discipline)
 
 - **Backend**: PHP 8.2 (Modular procedural / OOP service architecture, standard PHP runtime).
 - **Database**: SQLite 3 (PDO SQLite extension).
-- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Academic/Medical Design System), Bootstrap 5.3.3 (CDN), Vanilla JavaScript (No heavy frameworks or build steps).
+- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Academic/Medical Design System), Vanilla JavaScript, and Font Awesome Free 6.5.2 via CDN (No external UI frameworks or build steps).
 - **Local Environment**: XAMPP (Apache 2.4 + PHP 8.2 + SQLite) on Windows (`D:\XAMPP\htdocs\DOT Bank`).
 
 ### Hard Architectural Constraints
@@ -68,7 +68,7 @@ DOT Bank/
 │   ├── CSRF.php              # Cryptographic CSRF token generation and timing-safe verification
 │   ├── Database.php          # PDO SQLite singleton, WAL mode, foreign keys, transactions
 │   ├── JsonImporter.php      # JSON import parser, validator, preview, transactional import
-│   ├── Question.php          # Question management service (MCQ, Complete, Match, Compare, Essay CRUD & filters)
+│   ├── Question.php          # Question management service (MCQ, Complete, Match, Compare, Essay, True / False CRUD & filters)
 │   ├── Quiz.php              # Quiz planning (exact/closest), persistence, submission, grading
 │   └── View.php              # Template rendering engine, layout wrapper, flash messages, escaping
 ├── database/
@@ -206,7 +206,7 @@ DOT Bank/
 
 ### 6. `core/Question.php`
 - Business logic service for question bank management.
-- Supports exactly five question types: `mcq`, `complete`, `match`, `compare`, `essay`.
+- Supports six question types: `mcq`, `complete`, `match`, `compare`, `essay`, `true_false`.
 - Validates question text, subject_id, positive frequency, and type-specific rules.
 - Builds and decodes JSON-serialized payload stored in `answer_data` for all supported question types (available and unavailable answer states).
 - Handles creation, updates, and deletion of questions and associated sources transactionally.
@@ -222,7 +222,7 @@ DOT Bank/
   - **Closest-possible fallback**: greedy single-question allocation minimizing squared deviation from requested subject/type counts, restricted to explicitly requested dimensions.
 - Question selection: Fisher-Yates shuffle using `random_int()` after allocation; duplicate IDs rejected.
 - Quiz persistence: writes `quizzes` and ordered `quiz_questions` in a single transaction.
-- Submission & grading: validates answer formats, auto-grades MCQ (exact option match) and Match (exact mapping match), stores self-graded types with `is_correct = NULL`, calculates objective score (% correct of auto-graded only), marks quiz complete.
+- Submission & grading: validates answer formats, auto-grades MCQ (exact option match), Match (exact mapping match), and True / False (exact `true`/`false` string match), stores self-graded types with `is_correct = NULL`, calculates objective score (% correct of auto-graded only), marks quiz complete.
 - Transient lifecycle: completed quizzes + answers deleted after result payload prepared; no persistent history.
 - Active quiz discard endpoint (CSRF-protected, student-owned).
 
@@ -248,7 +248,7 @@ The SQLite database is located at `storage/dot_bank.sqlite`.
 1. `users`: `id`, `username` (UNIQUE COLLATE NOCASE), `password_hash`, `role` (CHECK 'admin'|'student'), `status` (CHECK 'active'|'disabled'), `created_at`.
 2. `modules`: `id`, `name` (UNIQUE), `description`, `created_at`.
 3. `subjects`: `id`, `module_id` (FK $\to$ `modules.id` ON DELETE CASCADE), `name`, `description`, `created_at`, `UNIQUE(module_id, name)`.
-4. `questions`: `id`, `subject_id` (FK $\to$ `subjects.id` ON DELETE CASCADE), `type` (CHECK 'mcq'|'complete'|'match'|'compare'|'essay'), `question_text`, `answer_data` (JSON), `answer_status` (CHECK 'available'|'unavailable'), `answer_origin` (CHECK 'manual'|'json_import'), `frequency` (INTEGER $\ge$ 1), `created_at`, `updated_at`.
+4. `questions`: `id`, `subject_id` (FK $\to$ `subjects.id` ON DELETE CASCADE), `type` (CHECK 'mcq'|'complete'|'match'|'compare'|'essay'|'true_false'), `question_text`, `answer_data` (JSON), `answer_status` (CHECK 'available'|'unavailable'), `answer_origin` (CHECK 'manual'|'json_import'), `frequency` (INTEGER $\ge$ 1), `created_at`, `updated_at`.
 5. `question_sources`: `id`, `question_id` (FK $\to$ `questions.id` ON DELETE CASCADE), `source_name`, `exam_year`, `exam_term`, `created_at`.
 6. `question_conflicts`: `id`, `question_id` (FK $\to$ `questions.id` ON DELETE CASCADE), `incoming_answer_data` (TEXT), `incoming_appearances` (TEXT), `status` (CHECK 'review'|'resolved'), `created_at`.
 7. `quizzes`: `id`, `user_id` (FK $\to$ `users.id`), `module_id` (FK $\to$ `modules.id`), `total_questions`, `created_at`, `completed_at`, `score`.
@@ -293,7 +293,7 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Student Curriculum Browser**: Read-only module/subject browsing.
 
 **Phase 3 — Question Bank**
-- **Question CRUD**: Admin manual question creation, editing, details view, and cascade deletion for exactly 5 question types (MCQ, Complete, Match, Compare, Essay).
+- **Question CRUD**: Admin manual question creation, editing, details view, and cascade deletion for six question types (MCQ, Complete, Match, Compare, Essay, True / False).
 - **Answer Availability**: Handles questions both with answers ("available") and without answers ("unavailable").
 - **Exam Appearances**: Canonical `question_sources` with `source_name` (final/end_module), `exam_year` (integer), `exam_term` (first/second); multiple appearances per question supported.
 - **Frequency Synchronization**: When exam appearances exist, frequency equals total recorded appearances; zero-appearance questions retain editable frequency.
@@ -302,7 +302,7 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Duplicate Detection**: Content identity hashing warns admin but never silently merges/deletes.
 
 **Phase 4 — JSON Import**
-- **Parser & Validator**: Validates external JSON contract (5 question types, appearances, choices/pairs/answers).
+- **Parser & Validator**: Validates external JSON contract (6 question types, appearances, choices/pairs/answers; True / False uses real JSON booleans).
 - **Preview Workflow**: Reports invalid records, duplicate candidates, merge/reuse impact, answer availability summary.
 - **Transactional Import**: Creates new questions (`answer_origin: 'json_import'`), merges appearances into existing questions (by content identity), preserves existing answers, populates unavailable answers, records conflicts in `question_conflicts` for review.
 - **Legacy Normalization**: Accepts legacy source strings (e.g., "Final Exam 2025") for compatibility.
@@ -312,11 +312,11 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Planning Algorithms**: Largest-remainder allocation, max-flow (Edmonds-Karp) for exact subject×type matrices, closest-possible fallback with squared-deviation minimization.
 - **Constraints**: Only explicitly entered percentage dimensions are hard constraints; unspecified dimensions remain flexible.
 - **Question Selection**: Fisher-Yates shuffle with `random_int()`; duplicate IDs rejected.
-- **Quiz Taking**: MCQ radio options, Match dropdown mappings, text areas for self-graded types; active quiz discard endpoint.
+- **Quiz Taking**: MCQ and True / False radio options, Match dropdown mappings, text areas for self-graded types; active quiz discard endpoint.
 - **Persistence**: `quizzes` + `quiz_questions` written in single transaction.
 
 **Phase 6 — Grading & Immediate Results**
-- **Auto-grading**: MCQ (exact option match), Match (exact mapping match).
+- **Auto-grading**: MCQ (exact option match), Match (exact mapping match), and True / False (exact normalized string match).
 - **Self-graded**: Complete, Compare, Essay stored with `is_correct = NULL`.
 - **Scoring**: Objective percentage = (correct / auto-graded) × 100; NULL if no auto-graded questions.
 - **Transient Lifecycle**: Submission prepares result payload, then transactionally removes quiz and answer rows; no persistent history.
@@ -330,7 +330,10 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **UX Fixes**: Match answer placeholder, "Accept and Start Quiz" wording, subject names in closest previews, improved JSON preview impact reporting, Frequency/Exam Appearance help text.
 
 ### ⏳ Phase 7 — In Progress
-- **Bootstrap 5 CDN Integration**: Bootstrap 5.3.3 added via CDN in shared layouts (`main.php`, `auth.php`). Custom `app.css` loads after Bootstrap for override priority. No existing classes replaced. All 369 regression assertions pass.
+- **Vanilla CSS Foundation**: Shared medical/academic design tokens and reusable primitives are maintained in both CSS asset paths used by the root and `public/` entry points.
+- **Responsive Navbar**: Role-aware navigation links are preserved with a Vanilla HTML/CSS/JS mobile menu and accessible state updates.
+- **Core UI Redesign**: Admin/student dashboards, academic catalogs, question-bank surfaces, forms, tables, cards, alerts, empty states, and responsive presentation use the shared Vanilla CSS system. Quiz Builder, Taking, and Result screens remain reserved for a dedicated follow-up pass.
+- **Font Awesome Enhancement**: Font Awesome Free 6.5.2 is loaded centrally with verified SRI in both layouts; a small set of decorative icons enhances navigation, dashboards, catalogs, actions, and search while preserving text labels and accessibility.
 - **Test Database Isolation**: All regression suites load `tests/bootstrap.php`, which runs them from a temporary application copy with a disposable SQLite database and installation lock. Tests must never modify `storage/dot_bank.sqlite` or `storage/installed.lock`.
 
 ---
@@ -342,7 +345,7 @@ Future agents MUST adhere to these rules without alteration:
 1. **No AI Generation in App**: The platform does NOT generate questions using AI APIs. Questions come from manual admin entry or externally generated JSON files.
 2. **Browsing Allowed**: Students must always be able to browse questions and answers directly without taking a quiz.
 3. **Grading Separation**:
-   - Auto-graded: `mcq`, `match`.
+   - Auto-graded: `mcq`, `match`, `true_false`.
    - Self-graded: `complete`, `compare`, `essay`. (No AI grading or complicated fuzzy matching).
 4. **Questions Without Answers**: Valid questions may have `answer: null` (`answer_status = 'unavailable'`). They must remain in the database so the admin can add the answer later.
 5. **IDs Are Internal**: JSON import files must NOT contain database IDs. IDs are always auto-generated by the database.
@@ -359,12 +362,12 @@ Future agents MUST adhere to these rules without alteration:
 |---|---|---|
 | **Phase 1** | Foundation (Config, SQLite, Setup Wizard, Auth, Layouts, Tests) | **Completed** |
 | **Phase 2** | Academic Structure (Module CRUD, Subject CRUD, Student Browsing, Tests) | **Completed** |
-| **Phase 3** | Question Bank (5 Question Types, Manual Entry, Search/Filter, Student Viewer) | **Completed** |
+| **Phase 3** | Question Bank (6 Question Types, Manual Entry, Search/Filter, Student Viewer) | **Completed** |
 | **Phase 4** | JSON Import (Schema Validation, Transactional Import, Import Guide) | **Completed** |
 | **Phase 5** | Quiz Engine (Constraints, Exact & Closest Modes, Shuffling, Interface) | **Completed** |
 | **Phase 6** | Grading & Immediate Results (Auto/Self Grading, Review, Transient Lifecycle) | **Completed** |
 | **Pre-Phase 7** | Hardening (Exam Appearances CRUD, Frequency Sync, Deletion Integrity, UX Fixes) | **Completed** |
-| **Phase 7** | Polish & UI Optimization (Responsive audits, empty states, security review) | **In Progress** |
+| **Phase 7** | Polish & UI Optimization (Vanilla CSS foundation, responsive Navbar, Core UI; quiz UI remains) | **In Progress** |
 | **Phase 8** | Final Verification & Delivery | **Not Started** |
 
 ---
@@ -402,16 +405,17 @@ Every suite uses the shared disposable test bootstrap and is safe to run without
 ### Verified Test Results
 - **`tests/phase1_test.php`**: **83 Passed, 0 Failed** (Schema integrity, storage security, setup locking, student registration, password hashing, authentication, brute-force rate-limiting, CSRF, and role guards).
 - **`tests/phase2_test.php`**: **38 Passed, 0 Failed** (Module CRUD, duplicate prevention, Subject CRUD, parent module relationships, module filtering, safe cascade deletion, student read-only browsing, admin authorization).
-- **`tests/phase3_test.php`**: **92 Passed, 0 Failed** (Creation of all 5 types [available/unavailable], strict client & server-side validation for MCQ and Match, edit timestamp update and ID preservation, cascade deletion of exam sources, multi-criteria filtering and text search, and student browser details).
+- **`tests/phase3_test.php`**: **92 Passed, 0 Failed** (Regression coverage for the original five types; True / False coverage is in `tests/true_false_test.php`, including available/unavailable CRUD, strict validation, filtering, import, quiz planning, taking, grading, results, and migration integrity).
 - **`tests/phase4_test.php`**: **16 Passed, 0 Failed** (JSON parsing, validation, preview, import, legacy normalization, module-subject scope).
-- **`tests/phase5_test.php`**: **29 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration).
-- **`tests/phase6_test.php`**: **19 Passed, 0 Failed** (Auto/self grading, transient lifecycle, deletion integrity, result review).
+- **`tests/phase5_test.php`**: **29 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration; True / False planner and grading coverage is in `tests/true_false_test.php`).
+- **`tests/phase6_test.php`**: **19 Passed, 0 Failed** (Auto/self grading, transient lifecycle, deletion integrity, result review; True / False objective grading and result coverage is in `tests/true_false_test.php`).
 - **`tests/pre_phase7_hardening_test.php`**: **29 Passed, 0 Failed** (Hardening assertions across all prior phases).
 - **`tests/exam_appearances_test.php`**: **19 Passed, 0 Failed** (Exam Appearances CRUD, validation, UI).
 - **`tests/frequency_consistency_test.php`**: **18 Passed, 0 Failed** (Frequency/appearance sync, repair tool).
 - **`tests/deletion_integrity_test.php`**: **11 Passed, 0 Failed** (Academic deletion pre-flight checks).
 - **`tests/manual_import_fixture_test.php`**: **15 Passed, 0 Failed** (Manual JSON import fixture scenarios).
-- **Total Assertions**: **369 Passed, 0 Failed** across all test suites.
+- **`tests/true_false_test.php`**: **20 Passed, 0 Failed** (True / False CRUD, validation, boolean import normalization, filtering, quiz planning/taking, correct/wrong/unanswered grading, result status, unavailable-answer lifecycle, and migration integrity).
+- **Total Assertions**: **389 Passed, 0 Failed** across all test suites.
 
 ---
 
@@ -497,7 +501,7 @@ When working on this codebase:
   - Updated navigation bar and dashboard statistics.
   - Verified with 38 new automated test assertions (total 121 assertions, 0 failures).
 - **2026-08-26 — Phase 3 Completed**:
-  - Created question management service (`core/Question.php`) supporting all 5 question types (MCQ, Complete, Match, Compare, Essay).
+  - Created question management service (`core/Question.php`) supporting all 6 question types (MCQ, Complete, Match, Compare, Essay, True / False).
   - Built full CRUD capabilities for questions: Create/Edit form with complex client-side JS logic for dynamic schemas, Detail View, and Cascading Delete.
   - Implemented multi-criteria search and filter queries on the admin and student question lists.
   - Set up student browser allowing read-only access to questions with interactive show/hide toggle behavior for answers.
@@ -520,7 +524,7 @@ When working on this codebase:
   - Fisher-Yates shuffle with `random_int`; explicit constraints only; flexible unspecified dimensions.
   - Verified with 27 dedicated assertions; full regression passed.
 - **2026-08-27 — Phase 6 Completed (Grading & Immediate Results)**:
-  - Server-side auto-grading (MCQ, Match), self-graded types (Complete, Compare, Essay), transient lifecycle.
+  - Server-side auto-grading (MCQ, Match, True / False), self-graded types (Complete, Compare, Essay), transient lifecycle.
   - Result review with per-question correct answers; no persistent history.
   - Quiz History route/view/navigation removed before Phase 7.
   - Verified with 19 dedicated assertions; full regression passed.
@@ -532,13 +536,15 @@ When working on this codebase:
   - UX Fix Pack (Match placeholder, discard endpoint, closest-plan subject names, "Accept and Start Quiz", JSON preview impact, help text).
   - Hardening suite: 29 assertions; total regression: 328+ assertions, 0 failures.
   - All test suites pass in isolated copies.
-- **Phase 7**: In progress; Bootstrap integration and Global UI Foundation stages are complete.
+- **Phase 7**: In progress; Vanilla CSS foundation, responsive Navbar, and Core UI redesign stages are complete. Quiz UI is intentionally deferred to its dedicated pass.
 - **Phase 8**: Not started.
-- **2026-08-30 — Phase 7 Bootstrap 5 Integration**:
-  - Added Bootstrap 5.3.3 via CDN to shared layouts (`views/layouts/main.php`, `views/layouts/auth.php`).
-  - Added Bootstrap 5.3.3 JS bundle to `views/partials/footer.php`.
-  - Custom `app.css` loads after Bootstrap for override priority. No existing CSS classes or HTML structure changed.
-  - All 369 automated test assertions pass (0 failures). PHP syntax clean.
+- **2026-08-30 — Phase 7 Vanilla Core UI Pass**:
+  - Confirmed the live application loads the root `assets/css/app.css` and `assets/js/app.js` URLs; the mirrored `public/assets/` files remain synchronized for the alternate public entry point.
+  - Established the Core UI visual layer for dashboards, academic catalogs, question-bank surfaces, forms, tables, cards, alerts, empty states, and responsive layouts without changing application behavior.
+  - Kept Quiz Builder, Quiz Taking, and Quiz Result presentation outside this pass.
+- **2026-08-30 — Phase 7 Font Awesome Enhancement**:
+  - Added centrally loaded Font Awesome Free 6.5.2 from jsDelivr with SHA-384 SRI `PPIZEGYM1v8zp5Py7UjFb79S58UeqCL9pYVnVPURKEqvioPROaVAJKKLzvH2rDnI`.
+  - Added accessible decorative icons to existing navigation, dashboard, catalog, question-bank, and action labels without changing destinations or behavior.
 - **2026-08-30 — Test Database Isolation**:
   - Added `tests/bootstrap.php` to run each suite from a temporary application copy with disposable SQLite storage.
   - Updated all regression suite entry points to use the isolated bootstrap.
@@ -566,10 +572,10 @@ Future agents should be aware of the following coupling, fragility, and maintena
 
 | Area | Risk | Mitigation |
 |------|------|------------|
-| **`Question::validate()`** (`core/Question.php:63-159`) | 100+ lines handling 5 question types + appearances; changes risk regressions across all types | Run full Phase 3 + Phase 4 + Phase 6 test suites after any modification |
+| **`Question::validate()`** (`core/Question.php:63-159`) | 100+ lines handling 6 question types + appearances; changes risk regressions across all types | Run full Phase 3 + Phase 4 + Phase 6 + True / False test suites after any modification |
 | **`Quiz::plan()`** (`core/Quiz.php:27-211`) | Max-flow, closest-matrix, largest-remainder all in one class; complex edge cases | Run Phase 5 tests; test uneven subject splits, shortage scenarios, flexible dimensions |
 | **`JsonImporter::import()`** (`core/JsonImporter.php:15-74`) | Identity hashing, conflict table, appearance deduplication, frequency validation tightly coupled | Run Phase 4 + manual import fixture tests; verify merge/reuse/conflict scenarios |
-| **Client-side form JS** (`views/admin/questions/form.php:167-527`) | 360+ lines of inline JS for dynamic MCQ/Match/appearance builders; no separation | Keep changes minimal; test all 5 question types in create/edit modes |
+| **Client-side form JS** (`views/admin/questions/form.php:167-527`) | 360+ lines of inline JS for dynamic MCQ/Match/True / False/appearance builders; no separation | Keep changes minimal; test all 6 question types in create/edit modes |
 | **Question Bank query builder** (`core/Question.php:13-58`) | Raw SQL string concatenation for filters; subtle bugs possible with new filters | Run Phase 3 + Phase 4 filter tests; verify pagination and all filter combinations |
 | **Session-dependent CSRF in tests** | CLI tests manipulate `$_SESSION` directly; real browser session behavior may differ | Verify CSRF behavior manually in browser for state-changing endpoints |
 | **Deletion pre-flight checks** (`core/Academic.php:128-160, 316-360`) | `countDependentQuizzesForModule/Subject` queries must stay in sync with schema | Run deletion integrity tests; verify FK behavior after schema changes |

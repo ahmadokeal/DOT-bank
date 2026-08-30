@@ -9,7 +9,7 @@ declare(strict_types=1);
  * available cell with the lowest deterministic squared deviation score.
  */
 class Quiz {
-    public const TYPES = ['mcq', 'complete', 'match', 'compare', 'essay'];
+    public const TYPES = ['mcq', 'complete', 'match', 'compare', 'essay', 'true_false'];
 
     public static function availability(int $moduleId, array $subjectIds): array {
         $subjectIds = self::subjectScope($moduleId, $subjectIds);
@@ -117,6 +117,8 @@ class Quiz {
                     $raw=$answers[(int)$q['quiz_question_id']]??null;$data=json_decode($q['answer_data']??'',true)?:[];$isCorrect=null;$stored='';
                     if($q['type']==='mcq'){
                         if(is_array($raw)) throw new InvalidArgumentException('Invalid MCQ answer format.');$stored=trim((string)($raw??''));$options=$data['options']??[];if($stored!==''&&!in_array($stored,$options,true))throw new InvalidArgumentException('Invalid MCQ answer.');$isCorrect=($stored!==''&&$stored===($data['correct_answer']??null))?1:0;$auto++;if($isCorrect===0)$unanswered+=($stored==='')?1:0;else $correct++;
+                    } elseif($q['type']==='true_false'){
+                        if(is_array($raw)) throw new InvalidArgumentException('Invalid True/False answer format.');$stored=strtolower(trim((string)($raw??'')));if($stored!==''&&!in_array($stored,['true','false'],true))throw new InvalidArgumentException('Invalid True/False answer.');$isCorrect=($stored!==''&&$stored===($data['answer']??null))?1:0;$auto++;if($isCorrect===1)$correct++;elseif($stored==='')$unanswered++;
                     } elseif($q['type']==='match'){
                         if($raw===null||$raw==='')$raw=[];if(!is_array($raw))throw new InvalidArgumentException('Invalid Match answer format.');if($raw!==[]&&count(array_filter($raw,fn($value)=>trim((string)$value)!==''))===0)$raw=[];$left=$data['left_items']??[];$right=$data['right_items']??[];foreach($raw as $key=>$value)if(!in_array((string)$key,$left,true)||!in_array((string)$value,$right,true))throw new InvalidArgumentException('Invalid Match answer.');$stored=json_encode($raw,JSON_UNESCAPED_UNICODE);$expected=$data['matches']??null;if(is_array($expected)){$a=$raw;$b=$expected;ksort($a);ksort($b);$isCorrect=($raw!==[]&&$a===$b)?1:0;}else{$isCorrect=0;}$auto++;if($isCorrect===1)$correct++;elseif($raw===[])$unanswered++;
                     } else {
