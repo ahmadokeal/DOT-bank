@@ -107,7 +107,7 @@ class Quiz {
         try {
             return Database::transaction(function(PDO $pdo) use($quizId,$userId,$answers){
                 $quiz=Database::fetchOne('SELECT * FROM quizzes WHERE id=? AND user_id=?',[$quizId,$userId]);
-                if(!$quiz || $quiz['completed_at']) return self::fail('This quiz is unavailable for submission.');
+                if(!$quiz) return self::fail('This in-progress quiz is unavailable for submission.');
                 $questions=Database::fetchAll('SELECT qq.id quiz_question_id,qq.question_order,q.* FROM quiz_questions qq JOIN questions q ON q.id=qq.question_id WHERE qq.quiz_id=? ORDER BY qq.question_order',[$quizId]);
                 if(!$questions) return self::fail('This quiz contains no questions.');
                 $existing=Database::fetchOne('SELECT 1 FROM quiz_answers WHERE quiz_question_id IN (SELECT id FROM quiz_questions WHERE quiz_id=?) LIMIT 1',[$quizId]);
@@ -141,9 +141,9 @@ class Quiz {
     public static function discard(int $quizId,int $userId): array {
         try {
             return Database::transaction(function(PDO $pdo) use($quizId,$userId){
-                $stmt=$pdo->prepare('DELETE FROM quizzes WHERE id=? AND user_id=? AND completed_at IS NULL');
+                $stmt=$pdo->prepare('DELETE FROM quizzes WHERE id=? AND user_id=?');
                 $stmt->execute([$quizId,$userId]);
-                return $stmt->rowCount()===1?['success'=>true,'message'=>'Quiz discarded successfully.']:self::fail('This quiz is unavailable or has already been completed.');
+                return $stmt->rowCount()===1?['success'=>true,'message'=>'Quiz discarded successfully.']:self::fail('This in-progress quiz is unavailable or has already been discarded.');
             });
         } catch(Throwable $e) { error_log('Quiz discard failed: '.$e->getMessage()); return self::fail('The quiz could not be discarded.'); }
     }

@@ -46,8 +46,9 @@ $cross=Quiz::create($student,array_merge($exact,['subject_ids'=>[$subjects[0]],'
 $matchPlan=Quiz::plan(['module_id'=>$module,'subject_ids'=>[$subjects[0]],'total_questions'=>1,'type_percentages'=>['match'=>100,'mcq'=>0,'complete'=>0,'compare'=>0,'essay'=>0]]);
 $emptyMatch=Quiz::create($student,$matchPlan);$emptyResult=Quiz::submit($emptyMatch['id'],$student,[]);$matchReview=$emptyResult['questions'][0]??[];
 $ok($emptyResult['success']&&($matchReview['student_answer']??null)==='[]'&&($matchReview['is_correct']??null)===0&&$emptyResult['unanswered']===1,'Untouched Match answer is stored as unanswered and graded incorrect');
-$active=Quiz::create($student,$exact);$discard=Quiz::discard($active['id'],$student);
-$ok($discard['success']&&Quiz::getForStudent($active['id'],$student)===null,'Student can discard an active quiz');
+$active=Quiz::create($student,$exact);$activeId=$active['id'];$discard=Quiz::discard($activeId,$student);
+$ok($discard['success']&&Quiz::getForStudent($activeId,$student)===null,'Student can discard an in-progress quiz');
+$ok((int)$pdo->query('SELECT COUNT(*) FROM quizzes')->fetchColumn()===0&&(int)$pdo->query('SELECT COUNT(*) FROM quiz_questions')->fetchColumn()===0&&(int)$pdo->query('SELECT COUNT(*) FROM quiz_answers')->fetchColumn()===0,'Discard removes the quiz and all related rows');
 $ok((int)Database::fetchOne('SELECT COUNT(*) c FROM questions WHERE id IN ('.implode(',',array_fill(0,count($exact['question_ids']),'?')).')', $exact['question_ids'])['c']===10,'Discard preserves question-bank rows');
 $takeView=file_get_contents(ROOT_PATH.'/views/student/quizzes/take.php');$builderView=file_get_contents(ROOT_PATH.'/views/student/quizzes/builder.php');
 $ok(str_contains($builderController,'$selectedModuleId')&&substr_count($builderView,'data-module=')>=2&&str_contains($builderView,'$selectedModuleId === (int)$s[\'module_id\']'),'Quiz builder limits subject controls to the selected module');

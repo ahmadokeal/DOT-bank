@@ -223,8 +223,8 @@ DOT Bank/
   - **Closest-possible fallback**: greedy single-question allocation minimizing squared deviation from requested subject/type counts, restricted to explicitly requested dimensions.
 - Question selection: Fisher-Yates shuffle using `random_int()` after allocation; duplicate IDs rejected.
 - Quiz persistence: writes `quizzes` and ordered `quiz_questions` in a single transaction.
-- Submission & grading: validates answer formats, auto-grades MCQ (exact option match), Match (exact mapping match), and True / False (exact `true`/`false` string match), stores self-graded types with `is_correct = NULL`, calculates objective score (% correct of auto-graded only), marks quiz complete.
-- Transient lifecycle: completed quizzes + answers deleted after result payload prepared; no persistent history.
+- Submission & grading: validates answer formats, auto-grades MCQ (exact option match), Match (exact mapping match), and True / False (exact `true`/`false` string match), stores self-graded types with `is_correct = NULL`, and calculates objective score (% correct of auto-graded only).
+- Transient lifecycle: an existing quiz row is in progress; submission or discard transactionally deletes the quiz, question links, and answer rows after preparing the immediate result. No persistent history exists.
 - Active quiz discard endpoint (CSRF-protected, student-owned).
 
 ### 8. `core/JsonImporter.php`
@@ -252,7 +252,7 @@ The SQLite database is located at `storage/dot_bank.sqlite`.
 4. `questions`: `id`, `subject_id` (FK $\to$ `subjects.id` ON DELETE CASCADE), `type` (CHECK 'mcq'|'complete'|'match'|'compare'|'essay'|'true_false'), `question_text`, `answer_data` (JSON), `answer_status` (CHECK 'available'|'unavailable'), `answer_origin` (CHECK 'manual'|'json_import'), `frequency` (INTEGER $\ge$ 1), `created_at`, `updated_at`.
 5. `question_sources`: `id`, `question_id` (FK $\to$ `questions.id` ON DELETE CASCADE), `source_name`, `exam_year`, `exam_term`, `created_at`.
 6. `question_conflicts`: `id`, `question_id` (FK $\to$ `questions.id` ON DELETE CASCADE), `incoming_answer_data` (TEXT), `incoming_appearances` (TEXT), `status` (CHECK 'review'|'resolved'), `created_at`.
-7. `quizzes`: `id`, `user_id` (FK $\to$ `users.id`), `module_id` (FK $\to$ `modules.id`), `total_questions`, `created_at`, `completed_at`, `score`.
+7. `quizzes`: `id`, `user_id` (FK $\to$ `users.id`), `module_id` (FK $\to$ `modules.id`), `total_questions`, `created_at`.
 8. `quiz_questions`: `id`, `quiz_id` (FK $\to$ `quizzes.id` ON DELETE CASCADE), `question_id` (FK $\to$ `questions.id`), `question_order`.
 9. `quiz_answers`: `id`, `quiz_question_id` (FK $\to$ `quiz_questions.id` ON DELETE CASCADE), `student_answer`, `is_correct` (INTEGER nullable: 1/0/NULL).
 10. `app_config`: `key` (PRIMARY KEY), `value`, `updated_at`.
@@ -320,7 +320,7 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Auto-grading**: MCQ (exact option match), Match (exact mapping match), and True / False (exact normalized string match).
 - **Self-graded**: Complete, Compare, Essay stored with `is_correct = NULL`.
 - **Scoring**: Objective percentage = (correct / auto-graded) × 100; NULL if no auto-graded questions.
-- **Transient Lifecycle**: Submission prepares result payload, then transactionally removes quiz and answer rows; no persistent history.
+- **Transient Lifecycle**: Existing quiz rows are in-progress; submission or discard transactionally removes the quiz, question links, and answer rows; no persistent history.
 - **Result Review**: Immediate read-only result with per-question correct answers and student responses.
 - **Idempotency**: Existing answer rows make repeat submissions fail safely.
 

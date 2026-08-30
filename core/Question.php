@@ -392,7 +392,7 @@ class Question {
         );
         $quizCount = (int)($usage['cnt'] ?? 0);
         if ($quizCount > 0) {
-            return ['success' => false, 'message' => "Question cannot be deleted because it is used in {$quizCount} active quiz record(s). Finish or cancel the active quiz first."];
+            return ['success' => false, 'message' => "Question cannot be deleted because {$quizCount} in-progress quiz instance(s) still reference it. Submit or discard the in-progress quiz first."];
         }
 
         try {

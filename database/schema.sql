@@ -80,8 +80,6 @@ CREATE TABLE IF NOT EXISTS quizzes (
     module_id INTEGER NOT NULL,
     total_questions INTEGER NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    completed_at DATETIME,
-    score REAL DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE RESTRICT
 );

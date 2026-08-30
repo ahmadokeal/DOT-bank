@@ -34,10 +34,10 @@ $quizQuestionId = (int)$pdo->lastInsertId();
 $pdo->prepare('INSERT INTO quiz_answers (quiz_question_id, student_answer, is_correct) VALUES (?, ?, 1)')->execute([$quizQuestionId, 'A']);
 
 $questionDelete = Question::deleteQuestion($questionId);
-$check($questionDelete['success'] === false && str_contains($questionDelete['message'], 'active quiz'), 'Question deletion is rejected safely while an active quiz references it');
+$check($questionDelete['success'] === false && str_contains($questionDelete['message'], 'in-progress quiz instance') && !str_contains($questionDelete['message'], 'active quiz record'), 'Question deletion is rejected safely with current in-progress quiz wording');
 $check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM questions WHERE id = ?', [$questionId])['c'] === 1, 'Rejected question deletion preserves the question');
 $subjectDelete = Academic::deleteSubject($subjectId);
-$check($subjectDelete['success'] === false && str_contains($subjectDelete['message'], 'active quiz'), 'Subject deletion is rejected safely while an active quiz references it');
+$check($subjectDelete['success'] === false && str_contains($subjectDelete['message'], 'in-progress quiz instance') && !str_contains($subjectDelete['message'], 'active quiz record'), 'Subject deletion is rejected safely with current in-progress quiz wording');
 $check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM subjects WHERE id = ?', [$subjectId])['c'] === 1 && (int)Database::fetchOne('SELECT COUNT(*) AS c FROM quizzes WHERE id = ?', [$quizId])['c'] === 1, 'Rejected subject deletion preserves the subject and quiz');
 $pdo->prepare('DELETE FROM quizzes WHERE id = ?')->execute([$quizId]);
 $subjectDelete = Academic::deleteSubject($subjectId);
@@ -55,7 +55,7 @@ $secondQuizId = (int)$pdo->lastInsertId();
 $pdo->prepare('INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, 1)')->execute([$secondQuizId, $secondQuestionId]);
 
 $moduleDelete = Academic::deleteModule($moduleId);
-$check($moduleDelete['success'] === false && str_contains($moduleDelete['message'], 'active quiz'), 'Module deletion is rejected safely while an active quiz references its questions');
+$check($moduleDelete['success'] === false && str_contains($moduleDelete['message'], 'in-progress quiz instance') && !str_contains($moduleDelete['message'], 'active quiz record'), 'Module deletion is rejected safely with current in-progress quiz wording');
 $check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM modules WHERE id = ?', [$moduleId])['c'] === 1 && (int)Database::fetchOne('SELECT COUNT(*) AS c FROM quizzes WHERE id = ?', [$secondQuizId])['c'] === 1, 'Rejected module deletion preserves the module and quiz');
 $pdo->prepare('DELETE FROM quizzes WHERE id = ?')->execute([$secondQuizId]);
 $moduleDelete = Academic::deleteModule($moduleId);

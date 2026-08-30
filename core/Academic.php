@@ -132,9 +132,9 @@ class Academic {
         }
 
         $subjectCount = (int)(Database::fetchOne('SELECT COUNT(*) as cnt FROM subjects WHERE module_id = ?', [$id])['cnt'] ?? 0);
-        $dependentQuizCount = self::countDependentQuizzesForModule($id);
+        $dependentQuizCount = self::countActiveQuizDependenciesForModule($id);
         if ($dependentQuizCount > 0) {
-            return ['success' => false, 'message' => "Module cannot be deleted because {$dependentQuizCount} active quiz record(s) contain its questions or belong to this module. Finish or cancel the active quiz first."];
+            return ['success' => false, 'message' => "Module cannot be deleted because {$dependentQuizCount} in-progress quiz instance(s) still reference its questions or module. Submit or discard the in-progress quiz first."];
         }
 
         try {
@@ -318,9 +318,9 @@ class Academic {
         if (!$subject) {
             return ['success' => false, 'message' => 'Subject not found.'];
         }
-        $dependentQuizCount = self::countDependentQuizzesForSubject($id);
+        $dependentQuizCount = self::countActiveQuizDependenciesForSubject($id);
         if ($dependentQuizCount > 0) {
-            return ['success' => false, 'message' => "Subject cannot be deleted because {$dependentQuizCount} active quiz record(s) contain its questions. Finish or cancel the active quiz first."];
+            return ['success' => false, 'message' => "Subject cannot be deleted because {$dependentQuizCount} in-progress quiz instance(s) still reference its questions. Submit or discard the in-progress quiz first."];
         }
 
         try {
@@ -335,10 +335,15 @@ class Academic {
         return ['success' => true, 'message' => "Subject \"{$subject['name']}\" was deleted successfully."];
     }
 
-    private static function countDependentQuizzesForSubject(int $subjectId): int {
+    /**
+     * Persisted quiz rows are in-progress by definition. Submission and
+     * discard delete the quiz and all dependent rows transactionally.
+     */
+    private static function countActiveQuizDependenciesForSubject(int $subjectId): int {
         $row = Database::fetchOne(
             'SELECT COUNT(DISTINCT qq.quiz_id) AS cnt
              FROM quiz_questions qq
+             JOIN quizzes qz ON qz.id = qq.quiz_id
              JOIN questions q ON q.id = qq.question_id
              WHERE q.subject_id = ?',
             [$subjectId]
@@ -346,7 +351,7 @@ class Academic {
         return (int)($row['cnt'] ?? 0);
     }
 
-    private static function countDependentQuizzesForModule(int $moduleId): int {
+    private static function countActiveQuizDependenciesForModule(int $moduleId): int {
         $row = Database::fetchOne(
             'SELECT COUNT(DISTINCT qz.id) AS cnt
              FROM quizzes qz

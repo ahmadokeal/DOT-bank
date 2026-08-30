@@ -84,7 +84,7 @@ Students choose a module, subjects, total question count, and optional subject/t
 
 Quiz questions are selected from the requested module and subjects without duplicate question IDs. MCQ, True / False, and Match questions are auto-graded. Complete, Compare, and Essay responses are stored for self-evaluation. The result includes the immediate question review and objective score where auto-graded questions exist.
 
-Submitted quizzes are transient: after the result payload is prepared, the quiz and its answer rows are removed. The repository does not provide a persistent quiz-history route.
+Quiz rows are transient in-progress state: after submission prepares the result payload, or when the student discards the quiz, the quiz and all related question-link and answer rows are removed. The repository does not provide persistent quiz history.
 
 ## JSON question import
 
