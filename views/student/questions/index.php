@@ -106,20 +106,20 @@
                             <?php endforeach; ?>
                         </div>
                     <?php elseif ($type === 'match' && !empty($decoded['left_items']) && !empty($decoded['right_items'])): ?>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.25rem; max-width: 700px;">
+                        <div class="student-match-columns">
                             <div>
                                 <strong style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Left Column</strong>
-                                <ul style="list-style: none; padding-left: 0;">
+                                <ul class="student-match-list">
                                     <?php foreach ($decoded['left_items'] as $item): ?>
-                                        <li style="padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.35rem; background: #ffffff; font-weight: 600;"><?= e($item) ?></li>
+                                        <li class="student-match-item"><?= e($item) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
                             </div>
                             <div>
                                 <strong style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Right Column</strong>
-                                <ul style="list-style: none; padding-left: 0;">
+                                <ul class="student-match-list">
                                     <?php foreach ($decoded['right_items'] as $item): ?>
-                                        <li style="padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.35rem; background: #ffffff; font-weight: 600;"><?= e($item) ?></li>
+                                        <li class="student-match-item"><?= e($item) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
                             </div>

@@ -10,11 +10,11 @@
             <?php if ($selectedModule): ?>
                 <a href="<?= url('admin/subjects.php') ?>" class="btn btn-secondary">Show All Subjects</a>
                 <a href="<?= url('admin/subject-form.php?module_id=' . (int)$selectedModule['id']) ?>" class="btn btn-primary">
-                    + Add Subject to <?= e($selectedModule['name']) ?>
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Subject to <?= e($selectedModule['name']) ?></span>
                 </a>
             <?php else: ?>
                 <a href="<?= url('admin/subject-form.php') ?>" class="btn btn-primary">
-                    + Add Subject
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Subject</span>
                 </a>
             <?php endif; ?>
         </div>
@@ -48,7 +48,7 @@
                 <?= $selectedModule ? 'No subjects have been created under ' . e($selectedModule['name']) . ' yet.' : 'No subjects have been added to any academic module yet.' ?>
             </p>
             <a href="<?= url('admin/subject-form.php' . ($selectedModuleId ? '?module_id=' . $selectedModuleId : '')) ?>" class="btn btn-primary">
-                Add First Subject
+                <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add First Subject</span>
             </a>
         </div>
     <?php else: ?>
@@ -79,10 +79,10 @@
                                 </td>
                                 <td style="padding: 1rem 1.25rem; text-align: right; white-space: nowrap;">
                                     <a href="<?= url('admin/subject-form.php?id=' . (int)$sub['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">
-                                        Edit
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i><span>Edit</span>
                                     </a>
                                     <a href="<?= url('admin/subject-delete.php?id=' . (int)$sub['id']) ?>" class="btn btn-sm" style="background-color: var(--error-bg); color: var(--error); border-color: var(--error-border);">
-                                        Delete
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i><span>Delete</span>
                                     </a>
                                 </td>
                             </tr>

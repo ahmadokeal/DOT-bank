@@ -129,7 +129,7 @@
                                     </span>
                                 </td>
                                 <td style="padding: 1rem 1.25rem; vertical-align: top;">
-                                    <div style="font-weight: 600; color: var(--dark); margin-bottom: 0.25rem; line-height: 1.4; max-height: 4.2em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                    <div class="question-list-text">
                                         <a href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>" style="color: var(--dark);">
                                             <?= e($q['question_text']) ?>
                                         </a>

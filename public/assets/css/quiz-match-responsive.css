@@ -1,0 +1,71 @@
+/* Match Question — quiz-taking only */
+.quiz-taking-page .quiz-match-row {
+    min-width: 0;
+    margin: 0 0 .75rem;
+    padding: 0;
+    border: 0;
+}
+
+.quiz-taking-page .quiz-match-row label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, .8fr);
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: .85rem 1rem;
+    border: 1px solid #dedde4;
+    border-radius: 12px;
+    color: #182230;
+    background: #fff;
+}
+
+.quiz-taking-page .quiz-match-row label,
+.quiz-taking-page .quiz-match-label {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.quiz-taking-page .quiz-match-row select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: .7rem .8rem;
+    border: 1px solid #d4d3dc;
+    border-radius: 10px;
+    color: #182230;
+    background: #fff;
+}
+
+.quiz-taking-page .quiz-match-row select:focus {
+    outline: none;
+    border-color: #6547d9;
+    box-shadow: 0 0 0 4px rgba(101,71,217,.14);
+}
+
+@media (max-width: 760px) {
+    .quiz-taking-page .quiz-match-row label {
+        grid-template-columns: minmax(0, 1fr) minmax(180px, .75fr);
+        gap: .75rem;
+        padding: .75rem;
+    }
+}
+
+@media (max-width: 560px) {
+    .quiz-taking-page .quiz-match-row label {
+        grid-template-columns: minmax(0, 1fr);
+        gap: .55rem;
+        align-items: stretch;
+    }
+
+    .quiz-taking-page .quiz-match-row select {
+        min-height: 44px;
+    }
+}

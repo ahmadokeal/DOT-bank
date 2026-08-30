@@ -67,3 +67,48 @@
         </div>
     </div>
 </div>
+
+<style>
+    .admin-dashboard-container .dashboard-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        min-height: 190px;
+        margin-bottom: 2.25rem !important;
+        padding: 2rem 2.25rem !important;
+    }
+
+    .admin-dashboard-container .dashboard-hero > div:first-child {
+        min-width: 0;
+    }
+
+    .admin-dashboard-container .dashboard-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 700px) {
+        .admin-dashboard-container .dashboard-hero {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 1.5rem !important;
+        }
+
+        .admin-dashboard-container .dashboard-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .admin-dashboard-container .dashboard-actions,
+        .admin-dashboard-container .dashboard-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
