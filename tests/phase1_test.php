@@ -6,9 +6,8 @@
 
 declare(strict_types=1);
 
-// Set test environment flags
-define('ROOT_PATH', dirname(__DIR__));
-require_once ROOT_PATH . '/config/config.php';
+// Set up an isolated disposable application copy.
+require_once __DIR__ . '/bootstrap.php';
 
 class Phase1TestRunner {
     private int $passed = 0;

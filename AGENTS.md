@@ -27,7 +27,7 @@ Module (Medical System / Discipline)
 
 ## 2. Current Project Status
 
-- **Current Active Phase**: **Pre-Phase 7 Hardening Complete** — All core features implemented through Phase 6. Phase 7 (Polish & UI Optimization) not started.
+- **Current Active Phase**: **Phase 7 In Progress** — Bootstrap integration, Global UI Foundation, and test database isolation are complete.
 - **Phase 1 (Foundation)**: Completed & verified (83/83 automated tests passed).
 - **Phase 2 (Academic Structure)**: Completed & verified (38/38 automated tests passed).
 - **Phase 3 (Question Bank)**: Completed & verified (92/92 automated tests passed).
@@ -36,7 +36,7 @@ Module (Medical System / Discipline)
 - **Phase 6 (Grading & Immediate Results)**: Completed & verified (19/19 dedicated assertions; persistent Quiz History removed).
 - **Pre-Phase 7 Hardening**: Completed & verified (29/29 dedicated assertions).
 - **Additional Test Suites**: Exam Appearances (19), Frequency Consistency (18), Deletion Integrity (11), Manual Import Fixture (15).
-- **Total Verified Assertions**: 328+ across all test suites (0 failures).
+- **Total Verified Assertions**: 369 across all test suites (0 failures).
 
 ---
 
@@ -44,7 +44,7 @@ Module (Medical System / Discipline)
 
 - **Backend**: PHP 8.2 (Modular procedural / OOP service architecture, standard PHP runtime).
 - **Database**: SQLite 3 (PDO SQLite extension).
-- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Academic/Medical Design System), Vanilla JavaScript (No heavy frameworks or build steps).
+- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Academic/Medical Design System), Bootstrap 5.3.3 (CDN), Vanilla JavaScript (No heavy frameworks or build steps).
 - **Local Environment**: XAMPP (Apache 2.4 + PHP 8.2 + SQLite) on Windows (`D:\XAMPP\htdocs\DOT Bank`).
 
 ### Hard Architectural Constraints
@@ -125,6 +125,7 @@ DOT Bank/
 │   ├── layouts/ (main.php, auth.php)
 │   └── partials/ (header.php, nav.php, flash.php, footer.php)
 ├── tests/
+│   ├── bootstrap.php           # Shared disposable test application/database bootstrap
 │   ├── phase1_test.php       # Phase 1 Foundation test suite (83 assertions)
 │   ├── phase2_test.php       # Phase 2 Academic Structure test suite (38 assertions)
 │   ├── phase3_test.php       # Phase 3 Question Bank test suite (92 assertions)
@@ -328,9 +329,9 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Deletion Integrity**: Pre-flight quiz dependency checks before question/subject/module deletion; controlled error instead of FK violation.
 - **UX Fixes**: Match answer placeholder, "Accept and Start Quiz" wording, subject names in closest previews, improved JSON preview impact reporting, Frequency/Exam Appearance help text.
 
-### ⏳ Not Started
-- **Phase 7**: Polish & UI Optimization (Responsive audits, empty states, security review).
-- **Phase 8**: Final Verification & Delivery.
+### ⏳ Phase 7 — In Progress
+- **Bootstrap 5 CDN Integration**: Bootstrap 5.3.3 added via CDN in shared layouts (`main.php`, `auth.php`). Custom `app.css` loads after Bootstrap for override priority. No existing classes replaced. All 369 regression assertions pass.
+- **Test Database Isolation**: All regression suites load `tests/bootstrap.php`, which runs them from a temporary application copy with a disposable SQLite database and installation lock. Tests must never modify `storage/dot_bank.sqlite` or `storage/installed.lock`.
 
 ---
 
@@ -363,7 +364,7 @@ Future agents MUST adhere to these rules without alteration:
 | **Phase 5** | Quiz Engine (Constraints, Exact & Closest Modes, Shuffling, Interface) | **Completed** |
 | **Phase 6** | Grading & Immediate Results (Auto/Self Grading, Review, Transient Lifecycle) | **Completed** |
 | **Pre-Phase 7** | Hardening (Exam Appearances CRUD, Frequency Sync, Deletion Integrity, UX Fixes) | **Completed** |
-| **Phase 7** | Polish & UI Optimization (Responsive audits, empty states, security review) | **Not Started** |
+| **Phase 7** | Polish & UI Optimization (Responsive audits, empty states, security review) | **In Progress** |
 | **Phase 8** | Final Verification & Delivery | **Not Started** |
 
 ---
@@ -372,6 +373,8 @@ Future agents MUST adhere to these rules without alteration:
 
 ### Running Automated Tests
 Run tests using the XAMPP PHP binary from PowerShell or Command Prompt:
+
+Every suite uses the shared disposable test bootstrap and is safe to run without changing the local application database or installation lock.
 
 ```powershell
 # Run Phase 1 Foundation tests (83 assertions)
@@ -400,15 +403,15 @@ Run tests using the XAMPP PHP binary from PowerShell or Command Prompt:
 - **`tests/phase1_test.php`**: **83 Passed, 0 Failed** (Schema integrity, storage security, setup locking, student registration, password hashing, authentication, brute-force rate-limiting, CSRF, and role guards).
 - **`tests/phase2_test.php`**: **38 Passed, 0 Failed** (Module CRUD, duplicate prevention, Subject CRUD, parent module relationships, module filtering, safe cascade deletion, student read-only browsing, admin authorization).
 - **`tests/phase3_test.php`**: **92 Passed, 0 Failed** (Creation of all 5 types [available/unavailable], strict client & server-side validation for MCQ and Match, edit timestamp update and ID preservation, cascade deletion of exam sources, multi-criteria filtering and text search, and student browser details).
-- **`tests/phase4_test.php`**: **15 Passed, 0 Failed** (JSON parsing, validation, preview, import, legacy normalization, module-subject scope).
-- **`tests/phase5_test.php`**: **27 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration).
+- **`tests/phase4_test.php`**: **16 Passed, 0 Failed** (JSON parsing, validation, preview, import, legacy normalization, module-subject scope).
+- **`tests/phase5_test.php`**: **29 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration).
 - **`tests/phase6_test.php`**: **19 Passed, 0 Failed** (Auto/self grading, transient lifecycle, deletion integrity, result review).
 - **`tests/pre_phase7_hardening_test.php`**: **29 Passed, 0 Failed** (Hardening assertions across all prior phases).
 - **`tests/exam_appearances_test.php`**: **19 Passed, 0 Failed** (Exam Appearances CRUD, validation, UI).
 - **`tests/frequency_consistency_test.php`**: **18 Passed, 0 Failed** (Frequency/appearance sync, repair tool).
 - **`tests/deletion_integrity_test.php`**: **11 Passed, 0 Failed** (Academic deletion pre-flight checks).
 - **`tests/manual_import_fixture_test.php`**: **15 Passed, 0 Failed** (Manual JSON import fixture scenarios).
-- **Total Assertions**: **328+ Passed, 0 Failed** across all test suites.
+- **Total Assertions**: **369 Passed, 0 Failed** across all test suites.
 
 ---
 
@@ -478,6 +481,7 @@ When working on this codebase:
 | [`tests/phase5_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase5_test.php) | Phase 5 Quiz Engine automated test suite |
 | [`tests/phase6_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase6_test.php) | Phase 6 Grading & Results automated test suite |
 | [`tests/pre_phase7_hardening_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/pre_phase7_hardening_test.php) | Pre-Phase 7 Hardening test suite |
+| [`tests/bootstrap.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/bootstrap.php) | Shared disposable test environment bootstrap |
 
 ---
 
@@ -528,7 +532,17 @@ When working on this codebase:
   - UX Fix Pack (Match placeholder, discard endpoint, closest-plan subject names, "Accept and Start Quiz", JSON preview impact, help text).
   - Hardening suite: 29 assertions; total regression: 328+ assertions, 0 failures.
   - All test suites pass in isolated copies.
-- **Phase 7 & 8**: Not started.
+- **Phase 7**: In progress; Bootstrap integration and Global UI Foundation stages are complete.
+- **Phase 8**: Not started.
+- **2026-08-30 — Phase 7 Bootstrap 5 Integration**:
+  - Added Bootstrap 5.3.3 via CDN to shared layouts (`views/layouts/main.php`, `views/layouts/auth.php`).
+  - Added Bootstrap 5.3.3 JS bundle to `views/partials/footer.php`.
+  - Custom `app.css` loads after Bootstrap for override priority. No existing CSS classes or HTML structure changed.
+  - All 369 automated test assertions pass (0 failures). PHP syntax clean.
+- **2026-08-30 — Test Database Isolation**:
+  - Added `tests/bootstrap.php` to run each suite from a temporary application copy with disposable SQLite storage.
+  - Updated all regression suite entry points to use the isolated bootstrap.
+  - Verified 369 assertions pass with unchanged SHA-256 hashes for the real application database and installation lock.
 
 ---
 

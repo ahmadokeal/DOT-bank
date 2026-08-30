@@ -14,4 +14,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Close the responsive navigation after selecting a destination.
+    const navigation = document.querySelector('#primary-navigation');
+    if (navigation) {
+        const toggle = document.querySelector('.nav-toggle');
+        navigation.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.matchMedia('(max-width: 768px)').matches) {
+                    if (window.bootstrap) {
+                        bootstrap.Collapse.getOrCreateInstance(navigation).hide();
+                    } else {
+                        navigation.classList.remove('show');
+                        toggle?.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+        });
+        if (toggle && !window.bootstrap) {
+            toggle.addEventListener('click', () => {
+                const open = navigation.classList.toggle('show');
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        }
+    }
 });

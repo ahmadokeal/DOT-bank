@@ -98,7 +98,7 @@
             </div>
             <div>
                 <strong>Exam Appearances (<?= count($question['appearances'] ?? []) ?>):</strong>
-                <?php if (!empty($question['appearances'])): ?><ul style="margin:.35rem 0 0;padding-left:1.1rem"><?php foreach ($question['appearances'] as $appearance): ?><li><?= e(ucwords(str_replace('_',' ',$appearance['source_name']))) ?> — <?= e(ucwords($appearance['exam_term'])) ?> Term <?= (int)$appearance['exam_year'] ?></li><?php endforeach; ?></ul><?php else: ?><div style="margin-top:.15rem"><em>No exam appearances recorded.</em></div><?php endif; ?>
+                <?php if (!empty($question['appearances'])): ?><ul style="margin:.35rem 0 0;padding-left:1.1rem"><?php foreach ($question['appearances'] as $appearance): ?><li><?= e(ucwords(str_replace('_',' ',$appearance['source_name']))) ?> — <?= e(ucwords($appearance['exam_term'] ?? '')) ?> Term <?= (int)$appearance['exam_year'] ?></li><?php endforeach; ?></ul><?php else: ?><div style="margin-top:.15rem"><em>No exam appearances recorded.</em></div><?php endif; ?>
             </div>
             <div>
                 <strong>Timestamps:</strong>

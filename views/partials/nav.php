@@ -7,7 +7,7 @@ $isAdmin = Auth::isAdmin();
 $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
 <header class="app-header">
-    <div class="header-container">
+    <div class="header-container container-fluid">
         <a href="<?= url($isLoggedIn ? ($isAdmin ? 'admin/dashboard.php' : 'student/dashboard.php') : '') ?>" class="brand-wrapper">
             <div class="brand-logo-icon">DOT</div>
             <div class="brand-text">
@@ -17,7 +17,11 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
         </a>
 
         <?php if ($isLoggedIn): ?>
-            <nav>
+            <button class="nav-toggle navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primary-navigation" aria-controls="primary-navigation" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" aria-hidden="true"></span>
+            </button>
+
+            <nav id="primary-navigation" class="navbar-collapse collapse">
                 <ul class="nav-links">
                     <?php if ($isAdmin): ?>
                         <li>

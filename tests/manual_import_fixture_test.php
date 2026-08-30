@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
-define('ROOT_PATH', dirname(__DIR__));
-require_once ROOT_PATH.'/config/config.php';
+require_once __DIR__ . '/bootstrap.php';
 $passed=0;$failed=0;$ok=function(bool $v,string $n)use(&$passed,&$failed){echo($v?'[PASS] ':'[FAIL] ').$n.PHP_EOL;$v?$passed++:$failed++;};
 $pdo=Database::getInstance();$pdo->exec(file_get_contents(DATABASE_PATH.'/schema.sql'));$pdo->exec('DELETE FROM quiz_answers;DELETE FROM quiz_questions;DELETE FROM quizzes;DELETE FROM question_conflicts;DELETE FROM question_sources;DELETE FROM questions;DELETE FROM subjects;DELETE FROM modules;');$pdo->exec("INSERT INTO modules(name) VALUES ('Fixture QA Module')");$m=(int)$pdo->lastInsertId();$pdo->prepare("INSERT INTO subjects(module_id,name) VALUES (?,?)")->execute([$m,'Fixture QA Subject']);$s=(int)$pdo->lastInsertId();
 $validFile=ROOT_PATH.'/tools/qa/manual_import_scenarios.json';$invalidFile=ROOT_PATH.'/tools/qa/manual_import_invalid_scenarios.json';$missingFile=ROOT_PATH.'/tools/qa/manual_import_invalid_missing_questions.json';$valid=json_decode(file_get_contents($validFile),true);$invalid=json_decode(file_get_contents($invalidFile),true);
