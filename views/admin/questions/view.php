@@ -75,11 +75,11 @@
 
                         <?php elseif ($type === 'match'): ?>
                             <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Items Matching:</p>
-                            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; background: #ffffff; padding: 1rem; border-radius: var(--radius-sm);">
+                            <div class="admin-match-answer-grid">
                                 <?php foreach ($decoded['matches'] ?? [] as $leftItem => $rightItem): ?>
-                                    <div style="padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-page); font-weight: 600;"><?= e($leftItem) ?></div>
-                                    <div style="color: var(--text-muted); font-weight: bold;">&rarr;</div>
-                                    <div style="padding: 0.5rem; border: 1px solid var(--success-border); border-radius: var(--radius-sm); background: var(--success-bg); color: #14532d; font-weight: 600;"><?= e($rightItem) ?></div>
+                                    <div class="admin-match-answer-item admin-match-answer-item-left"><?= e($leftItem) ?></div>
+                                    <div class="admin-match-answer-arrow">&rarr;</div>
+                                    <div class="admin-match-answer-item admin-match-answer-item-right"><?= e($rightItem) ?></div>
                                 <?php endforeach; ?>
                             </div>
 

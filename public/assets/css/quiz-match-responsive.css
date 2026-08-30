@@ -24,11 +24,14 @@
 
 .quiz-taking-page .quiz-match-row label,
 .quiz-taking-page .quiz-match-label {
-    display: block;
     max-width: 100%;
     min-width: 0;
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.quiz-taking-page .quiz-match-label {
+    display: block;
 }
 
 .quiz-taking-page .quiz-match-row select {

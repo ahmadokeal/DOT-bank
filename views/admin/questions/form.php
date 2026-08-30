@@ -105,15 +105,15 @@
             <div id="answer-container-match" class="card type-container" style="background: var(--bg-page); display: none;">
                 <h4 style="margin-bottom: 0.75rem;">Matching Configuration</h4>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
+                <div class="match-builder-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
                     <div>
                         <h5 style="margin-bottom: 0.5rem; color: var(--text);">Left-side Items</h5>
-                        <div id="match-left-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
+                        <div id="match-left-wrapper" class="match-items-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
                         <button type="button" id="add-match-left" class="btn btn-secondary btn-sm">+ Add Left Item</button>
                     </div>
                     <div>
                         <h5 style="margin-bottom: 0.5rem; color: var(--text);">Right-side Items</h5>
-                        <div id="match-right-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
+                        <div id="match-right-wrapper" class="match-items-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
                         <button type="button" id="add-match-right" class="btn btn-secondary btn-sm">+ Add Right Item</button>
                     </div>
                 </div>
@@ -350,9 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderMatchLeft = (value = '') => {
         const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '0.35rem';
+        row.className = 'match-item-row';
         
         row.innerHTML = `
             <input type="text" name="left_items[]" class="form-control match-left-item" value="${escapeHtml(value)}" placeholder="Left item" required>
@@ -371,9 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderMatchRight = (value = '') => {
         const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '0.35rem';
+        row.className = 'match-item-row';
         
         row.innerHTML = `
             <input type="text" name="right_items[]" class="form-control match-right-item" value="${escapeHtml(value)}" placeholder="Right item" required>

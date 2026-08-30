@@ -27,7 +27,7 @@ Module (Medical System / Discipline)
 
 ## 2. Current Project Status
 
-- **Current Active Phase**: **Phase 7 In Progress** — Vanilla CSS foundation, responsive Navbar, Core UI redesign, and Font Awesome enhancement are complete; quiz screens remain a separate UI pass.
+- **Current Active Phase**: **Phase 7 Core UI foundation completed** — the approved Student Dashboard visual language has been propagated across the shared Core UI, with responsive Match-question containment and project documentation added. Quiz Builder, Quiz Taking, and Quiz Result remain a separate UI pass except for the focused Match responsive fix.
 - **Phase 1 (Foundation)**: Completed & verified (83/83 automated tests passed).
 - **Phase 2 (Academic Structure)**: Completed & verified (38/38 automated tests passed).
 - **Phase 3 (Question Bank)**: Completed & verified (92/92 automated tests passed).
@@ -36,7 +36,7 @@ Module (Medical System / Discipline)
 - **Phase 6 (Grading & Immediate Results)**: Completed & verified (19/19 dedicated assertions; persistent Quiz History removed).
 - **Pre-Phase 7 Hardening**: Completed & verified (29/29 dedicated assertions).
 - **Additional Test Suites**: Exam Appearances (19), Frequency Consistency (18), Deletion Integrity (11), Manual Import Fixture (15).
-- **Total Verified Assertions**: 369 across all test suites (0 failures).
+- **Total Verified Assertions**: 389 across all test suites (0 failures).
 
 ---
 
@@ -165,6 +165,7 @@ DOT Bank/
 ├── register.php              # Root forwarder to public/register.php
 ├── logout.php                # Root forwarder to public/logout.php
 ├── AGENTS.md                 # Primary AI Agent & Developer Source of Truth
+├── README.md                 # Developer-facing project overview and setup guide
 └── implementation_plan.md    # Active implementation plan
 ```
 
@@ -329,11 +330,16 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Deletion Integrity**: Pre-flight quiz dependency checks before question/subject/module deletion; controlled error instead of FK violation.
 - **UX Fixes**: Match answer placeholder, "Accept and Start Quiz" wording, subject names in closest previews, improved JSON preview impact reporting, Frequency/Exam Appearance help text.
 
-### ⏳ Phase 7 — In Progress
+### ✅ Phase 7 Core UI Foundation — Completed
 - **Vanilla CSS Foundation**: Shared medical/academic design tokens and reusable primitives are maintained in both CSS asset paths used by the root and `public/` entry points.
 - **Responsive Navbar**: Role-aware navigation links are preserved with a Vanilla HTML/CSS/JS mobile menu and accessible state updates.
-- **Core UI Redesign**: Admin/student dashboards, academic catalogs, question-bank surfaces, forms, tables, cards, alerts, empty states, and responsive presentation use the shared Vanilla CSS system. Quiz Builder, Taking, and Result screens remain reserved for a dedicated follow-up pass.
+- **Core UI Redesign**: Admin/student dashboards, academic catalogs, question-bank surfaces, forms, tables, cards, alerts, empty states, and responsive presentation use the shared Vanilla CSS system. The approved Student Dashboard is the visual reference for colors, typography, spacing, surfaces, borders, shadows, buttons, icons, hierarchy, and responsive behavior; no separate palette or design direction should be introduced for Core UI pages.
 - **Font Awesome Enhancement**: Font Awesome Free 6.5.2 is loaded centrally with verified SRI in both layouts; a small set of decorative icons enhances navigation, dashboards, catalogs, actions, and search while preserving text labels and accessibility.
+- **Mirrored CSS Assets**: `assets/css/app.css` and `public/assets/css/app.css` are kept synchronized. The supplemental `quiz-match-responsive.css` and `student-match-responsive.css` files are mirrored as well; update both asset paths when changing shared presentation.
+- **Long-Text Containment**: Shared content containers use `min-width: 0` and scoped wrapping rules so normal text and extremely long unbroken strings remain inside their containers without truncation or ellipsis. Match item layouts use responsive grid constraints and wrapping labels/selects.
+- **CSS Organization**: Reusable presentation patterns are extracted into shared classes in `app.css`; page-specific styling remains local where it is genuinely unique. Avoid adding new inline styles when an existing shared component or a small reusable class is appropriate.
+- **Documentation**: `README.md` documents the verified architecture, setup, supported question types, import contract, testing, security, and development workflow.
+- **Quiz UI Scope**: Quiz Builder, Quiz Taking, and Quiz Result presentation remain reserved for a dedicated follow-up pass; the Match responsive fix is limited to preventing long item overflow and preserving existing quiz behavior.
 - **Test Database Isolation**: All regression suites load `tests/bootstrap.php`, which runs them from a temporary application copy with a disposable SQLite database and installation lock. Tests must never modify `storage/dot_bank.sqlite` or `storage/installed.lock`.
 
 ---
@@ -367,7 +373,7 @@ Future agents MUST adhere to these rules without alteration:
 | **Phase 5** | Quiz Engine (Constraints, Exact & Closest Modes, Shuffling, Interface) | **Completed** |
 | **Phase 6** | Grading & Immediate Results (Auto/Self Grading, Review, Transient Lifecycle) | **Completed** |
 | **Pre-Phase 7** | Hardening (Exam Appearances CRUD, Frequency Sync, Deletion Integrity, UX Fixes) | **Completed** |
-| **Phase 7** | Polish & UI Optimization (Vanilla CSS foundation, responsive Navbar, Core UI; quiz UI remains) | **In Progress** |
+| **Phase 7** | Polish & UI Optimization (Vanilla CSS foundation, responsive Navbar, Core UI, approved Student Dashboard visual propagation, CSS organization, long-text containment; quiz UI remains reserved except Match responsive containment) | **Core UI Completed** |
 | **Phase 8** | Final Verification & Delivery | **Not Started** |
 
 ---
@@ -478,6 +484,9 @@ When working on this codebase:
 | [`public/student/quiz-discard.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/public/student/quiz-discard.php) | Student active quiz discard controller |
 | [`views/layouts/main.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/views/layouts/main.php) | Main shared application layout with DOT Bank branding |
 | [`assets/css/app.css`](file:///d:/XAMPP/htdocs/DOT%20Bank/assets/css/app.css) | Medical & Academic Design System stylesheet |
+| [`assets/css/quiz-match-responsive.css`](file:///d:/XAMPP/htdocs/DOT%20Bank/assets/css/quiz-match-responsive.css) | Responsive Match-question containment stylesheet |
+| [`assets/css/student-match-responsive.css`](file:///d:/XAMPP/htdocs/DOT%20Bank/assets/css/student-match-responsive.css) | Responsive Student Match browsing stylesheet |
+| [`README.md`](file:///d:/XAMPP/htdocs/DOT%20Bank/README.md) | Developer-facing project overview, setup, testing, and workflow guide |
 | [`tests/phase1_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase1_test.php) | Phase 1 Foundation automated test suite |
 | [`tests/phase2_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase2_test.php) | Phase 2 Academic Structure automated test suite |
 | [`tests/phase3_test.php`](file:///d:/XAMPP/htdocs/DOT%20Bank/tests/phase3_test.php) | Phase 3 Question Bank automated test suite |
@@ -536,7 +545,7 @@ When working on this codebase:
   - UX Fix Pack (Match placeholder, discard endpoint, closest-plan subject names, "Accept and Start Quiz", JSON preview impact, help text).
   - Hardening suite: 29 assertions; total regression: 328+ assertions, 0 failures.
   - All test suites pass in isolated copies.
-- **Phase 7**: In progress; Vanilla CSS foundation, responsive Navbar, and Core UI redesign stages are complete. Quiz UI is intentionally deferred to its dedicated pass.
+- **Phase 7**: Core UI foundation completed; the approved Student Dashboard visual language, responsive Navbar, shared Core UI, CSS organization, long-text containment, and focused Match responsive fix are complete. Quiz UI is intentionally deferred to its dedicated pass except for that Match containment fix.
 - **Phase 8**: Not started.
 - **2026-08-30 — Phase 7 Vanilla Core UI Pass**:
   - Confirmed the live application loads the root `assets/css/app.css` and `assets/js/app.js` URLs; the mirrored `public/assets/` files remain synchronized for the alternate public entry point.
@@ -549,6 +558,13 @@ When working on this codebase:
   - Added `tests/bootstrap.php` to run each suite from a temporary application copy with disposable SQLite storage.
   - Updated all regression suite entry points to use the isolated bootstrap.
   - Verified 369 assertions pass with unchanged SHA-256 hashes for the real application database and installation lock.
+- **2026-08-30 — Phase 7 UI Foundation & Documentation Completed**:
+  - Propagated the approved Student Dashboard visual language across the Core UI: shared surfaces, cards, spacing, borders, shadows, buttons, icons, hierarchy, and responsive behavior.
+  - Kept root and `public/` CSS assets synchronized and extracted reusable presentation patterns from repeated inline styles where appropriate.
+  - Added shared long-text containment using `min-width: 0` and wrapping rules for normal and unbroken text without truncation or ellipsis.
+  - Added responsive Match-question styles in mirrored `quiz-match-responsive.css` files and responsive Student Match browsing styles in mirrored `student-match-responsive.css` files.
+  - Added `README.md` with verified project architecture, setup, features, security, testing, and workflow documentation.
+  - Verified the complete documented test set at 389 passed assertions and 0 failures; PHP syntax checks and `git diff --check` passed.
 
 ---
 

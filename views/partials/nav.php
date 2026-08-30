@@ -94,20 +94,6 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
     </div>
 </header>
 
-<style>
-    .app-header .nav-toggle { display: none; }
-    .app-header .nav-toggle-bar { display: block; width: 20px; height: 2px; margin: 3px 0; border-radius: 2px; background: var(--primary); }
-    @media (max-width: 768px) {
-        .app-header .header-container { display: flex; flex-wrap: wrap; gap: .5rem; }
-        .app-header .nav-toggle { display: flex; margin-left: auto; width: 42px; height: 42px; padding: .55rem; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: var(--radius-md); background: transparent; cursor: pointer; }
-        .app-header nav { display: none; width: 100%; flex-basis: 100%; order: 3; }
-        .app-header nav.nav-open { display: block; }
-        .app-header .nav-links { display: flex; flex-direction: column; align-items: stretch; width: 100%; margin: .25rem 0 0; padding: .5rem 0 0; border-top: 1px solid var(--border); gap: .2rem; }
-        .app-header .nav-links li, .app-header .nav-link { width: 100%; }
-        .app-header .nav-link { display: block; }
-        .app-header .user-nav-section { width: 100%; order: 4; justify-content: space-between; padding-top: .5rem; border-top: 1px solid var(--border); }
-    }
-</style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var navigation = document.getElementById('primary-navigation');
