@@ -1,6 +1,6 @@
-<div class="student-dashboard-container">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-        <div>
+<div class="student-dashboard-container dashboard-page">
+    <div class="dashboard-hero">
+        <div class="dashboard-actions">
             <h1>Student Portal</h1>
             <p style="color: var(--text-muted);">Welcome, <strong><?= e($user['username'] ?? 'Student') ?></strong> to Doctors of Tomorrow Question Bank.</p>
         </div>
@@ -10,11 +10,11 @@
     </div>
 
     <div class="metrics-grid">
-        <a href="<?= url('student/modules.php') ?>" class="metric-card" style="text-decoration: none;">
+        <a href="<?= url('student/modules.php') ?>" class="metric-card dashboard-metric" style="text-decoration: none;">
             <span class="metric-title">Curriculum Modules</span>
             <span class="metric-value"><?= (int)($stats['modules'] ?? 0) ?></span>
         </a>
-        <div class="metric-card">
+        <div class="metric-card dashboard-metric">
             <span class="metric-title">Available Questions</span>
             <span class="metric-value"><?= (int)($stats['questions'] ?? 0) ?></span>
         </div>
