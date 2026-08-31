@@ -17,17 +17,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const navigation = document.querySelector('#primary-navigation');
     const navToggle = document.querySelector('.nav-toggle');
+    const navToggleIcon = navToggle ? navToggle.querySelector('.nav-toggle-icon') : null;
     if (navigation && navToggle) {
         const closeNavigation = () => {
             navigation.classList.remove('nav-open');
             navToggle.setAttribute('aria-expanded', 'false');
             navToggle.setAttribute('aria-label', 'Open navigation');
+            if (navToggleIcon) navToggleIcon.classList.replace('fa-xmark', 'fa-bars');
         };
 
         navToggle.addEventListener('click', () => {
             const isOpen = navigation.classList.toggle('nav-open');
             navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             navToggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+            if (navToggleIcon) navToggleIcon.classList.replace(isOpen ? 'fa-bars' : 'fa-xmark', isOpen ? 'fa-xmark' : 'fa-bars');
         });
 
         navigation.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', closeNavigation));

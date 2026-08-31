@@ -6,6 +6,8 @@ DOT Bank (Doctors of Tomorrow Question Bank) is a PHP question-bank and examinat
 
 The application provides a structured alternative to mixed, unstructured exam-question files. Administrators curate the academic hierarchy and question bank; students browse questions directly or build and complete quizzes from the available question pool.
 
+Unauthenticated visitors are greeted by an Arabic RTL public landing page at the root entry point; authenticated users are redirected to their respective dashboards.
+
 ## Main features
 
 - Initial installation wizard with administrator account creation.
@@ -26,7 +28,7 @@ The database and application support:
 
 - **MCQ** — automatically graded by exact correct-option text.
 - **True / False** — automatically graded by exact normalized `true`/`false` value.
-- **Match** — automatically graded when the submitted mapping exactly matches the stored mapping.
+- **Match** — automatically graded per pair, with partial credit for independently correct mappings.
 - **Complete** — self-graded by the student.
 - **Compare** — self-graded by the student.
 - **Essay** — self-graded by the student.
@@ -62,7 +64,7 @@ The repository supports entry points from both the project root and `public/`. R
 Important service classes include:
 
 - `core/Auth.php` — authentication, registration, session role checks, and route guards.
-- `core/Academic.php` — module/subject CRUD and safe deletion checks.
+- `core/Academic.php` — module/subject CRUD and transactional deletion with implicit discard of dependent transient quizzes.
 - `core/Question.php` — question validation, CRUD, filtering, appearances, and frequency rules.
 - `core/Quiz.php` — quiz availability, planning, persistence, submission, grading, and discard.
 - `core/JsonImporter.php` — JSON parsing, normalization, preview, conflict handling, and import.
@@ -82,9 +84,11 @@ Admin routes use the administrator guard, and student routes use the student gua
 
 Students choose a module, subjects, total question count, and optional subject/type percentage distributions in the quiz builder. The planner uses the available question counts and can produce an exact or closest-possible proposal when constraints cannot be fully satisfied.
 
-Quiz questions are selected from the requested module and subjects without duplicate question IDs. MCQ, True / False, and Match questions are auto-graded. Complete, Compare, and Essay responses are stored for self-evaluation. The result includes the immediate question review and objective score where auto-graded questions exist.
+Quiz questions are selected from the requested module and subjects without duplicate question IDs. MCQ and True / False are auto-graded per question; Match remains one question but contributes one objective scoring unit per pair, allowing partial credit. Complete, Compare, and Essay responses are stored for self-evaluation. The result includes the immediate question review and objective score where auto-graded units exist.
 
 Quiz rows are transient in-progress state: after submission prepares the result payload, or when the student discards the quiz, the quiz and all related question-link and answer rows are removed. The repository does not provide persistent quiz history.
+
+If an administrator deletes a module, subject, or question while a transient quiz still references it, that quiz is implicitly discarded in the same transaction before the academic content is deleted. Existing foreign-key protections remain enabled.
 
 ## JSON question import
 
@@ -120,16 +124,17 @@ The repository contains suites for:
 - Phase 2 academic structure — 38 assertions.
 - Phase 3 question bank — 92 assertions.
 - Phase 4 JSON import — 16 assertions.
-- Phase 5 quiz engine — 29 assertions.
-- Phase 6 grading and immediate results — 19 assertions.
+- Phase 5 quiz engine — 30 assertions.
+- Phase 6 grading and immediate results — 20 assertions.
 - Pre-Phase 7 hardening — 29 assertions.
 - True / False coverage — 20 assertions.
 - Exam appearances — 19 assertions.
 - Frequency consistency — 18 assertions.
 - Deletion integrity — 11 assertions.
+- Match pair-level scoring — 20 assertions.
 - Manual import fixtures — 15 assertions.
 
-The documented combined coverage is **389 passed assertions and 0 failed assertions**.
+The documented combined coverage is **427 passed assertions and 0 failed assertions**.
 
 Run the complete test set from PowerShell with the XAMPP PHP binary:
 
@@ -190,6 +195,8 @@ The configuration currently enables error display, so production operators shoul
 ## Current UI and design approach
 
 The interface uses a shared Vanilla CSS/JS presentation layer with responsive layouts, reusable cards, forms, alerts, tables, dashboard surfaces, navigation, focus states, and Font Awesome icons. Root and `public` CSS assets are maintained as mirrored files. Quiz Builder, Quiz Taking, and Quiz Result screens remain part of the existing application but are documented as a separate UI pass in the project continuity guide.
+
+The public entry point (`public/index.php`) serves an Arabic RTL landing page for unauthenticated visitors (hero, features, question types, how-it-works, final CTA, footer) built with the same design tokens; authenticated users are redirected to their dashboards.
 
 ## Development workflow
 

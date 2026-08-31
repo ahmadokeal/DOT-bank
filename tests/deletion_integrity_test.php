@@ -20,47 +20,68 @@ $pdo->prepare('INSERT INTO users (username, password_hash, role, status, created
     ->execute(['deletion_test_student', password_hash('DeletionPass123', PASSWORD_DEFAULT), 'student', 'active', $now]);
 $studentId = (int)$pdo->lastInsertId();
 
-$pdo->prepare('INSERT INTO modules (name, created_at) VALUES (?, ?)')->execute(['Deletion Test Module', $now]);
-$moduleId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO subjects (module_id, name, created_at) VALUES (?, ?, ?)')->execute([$moduleId, 'Deletion Test Subject', $now]);
-$subjectId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO questions (subject_id, type, question_text, answer_data, answer_status, answer_origin, frequency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    ->execute([$subjectId, 'mcq', 'Question referenced by a quiz', '{"options":["A","B"],"correct_answer":"A"}', 'available', 'manual', 1, $now, $now]);
-$questionId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO quizzes (user_id, module_id, total_questions, created_at) VALUES (?, ?, ?, ?)')->execute([$studentId, $moduleId, 1, $now]);
-$quizId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, 1)')->execute([$quizId, $questionId]);
-$quizQuestionId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO quiz_answers (quiz_question_id, student_answer, is_correct) VALUES (?, ?, 1)')->execute([$quizQuestionId, 'A']);
+$insertModule = static function (string $name) use ($pdo, $now): int {
+    $pdo->prepare('INSERT INTO modules (name, created_at) VALUES (?, ?)')->execute([$name, $now]);
+    return (int)$pdo->lastInsertId();
+};
+$insertSubject = static function (int $moduleId, string $name) use ($pdo, $now): int {
+    $pdo->prepare('INSERT INTO subjects (module_id, name, created_at) VALUES (?, ?, ?)')->execute([$moduleId, $name, $now]);
+    return (int)$pdo->lastInsertId();
+};
+$insertQuestion = static function (int $subjectId, string $type, string $text) use ($pdo, $now): int {
+    $data = $type === 'mcq' ? '{"options":["A","B"],"correct_answer":"A"}' : '{"answer":"Model"}';
+    $pdo->prepare('INSERT INTO questions (subject_id, type, question_text, answer_data, answer_status, answer_origin, frequency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        ->execute([$subjectId, $type, $text, $data, 'available', 'manual', 1, $now, $now]);
+    return (int)$pdo->lastInsertId();
+};
+$insertQuiz = static function (int $moduleId, int $questionId, bool $withAnswer = true) use ($pdo, $studentId, $now): array {
+    $pdo->prepare('INSERT INTO quizzes (user_id, module_id, total_questions, created_at) VALUES (?, ?, ?, ?)')->execute([$studentId, $moduleId, 1, $now]);
+    $quizId = (int)$pdo->lastInsertId();
+    $pdo->prepare('INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, 1)')->execute([$quizId, $questionId]);
+    $quizQuestionId = (int)$pdo->lastInsertId();
+    if ($withAnswer) {
+        $pdo->prepare('INSERT INTO quiz_answers (quiz_question_id, student_answer, is_correct) VALUES (?, ?, 1)')->execute([$quizQuestionId, 'A']);
+    }
+    return [$quizId, $quizQuestionId];
+};
 
-$questionDelete = Question::deleteQuestion($questionId);
-$check($questionDelete['success'] === false && str_contains($questionDelete['message'], 'in-progress quiz instance') && !str_contains($questionDelete['message'], 'active quiz record'), 'Question deletion is rejected safely with current in-progress quiz wording');
-$check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM questions WHERE id = ?', [$questionId])['c'] === 1, 'Rejected question deletion preserves the question');
-$subjectDelete = Academic::deleteSubject($subjectId);
-$check($subjectDelete['success'] === false && str_contains($subjectDelete['message'], 'in-progress quiz instance') && !str_contains($subjectDelete['message'], 'active quiz record'), 'Subject deletion is rejected safely with current in-progress quiz wording');
-$check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM subjects WHERE id = ?', [$subjectId])['c'] === 1 && (int)Database::fetchOne('SELECT COUNT(*) AS c FROM quizzes WHERE id = ?', [$quizId])['c'] === 1, 'Rejected subject deletion preserves the subject and quiz');
-$pdo->prepare('DELETE FROM quizzes WHERE id = ?')->execute([$quizId]);
-$subjectDelete = Academic::deleteSubject($subjectId);
-$check($subjectDelete['success'] === true, 'Subject deletion succeeds after the dependent quiz is removed');
-$check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM questions WHERE id = ?', [$questionId])['c'] === 0, 'Subject questions are removed by the existing cascade');
-$check((int)$pdo->query('PRAGMA foreign_key_check')->fetchColumn() === 0, 'Subject deletion leaves no foreign-key violations');
-
-$pdo->prepare('INSERT INTO subjects (module_id, name, created_at) VALUES (?, ?, ?)')->execute([$moduleId, 'Second Deletion Subject', $now]);
-$secondSubjectId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO questions (subject_id, type, question_text, answer_data, answer_status, answer_origin, frequency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    ->execute([$secondSubjectId, 'essay', 'Second question referenced by a quiz', '{"answer":"Model"}', 'available', 'manual', 1, $now, $now]);
-$secondQuestionId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO quizzes (user_id, module_id, total_questions, created_at) VALUES (?, ?, ?, ?)')->execute([$studentId, $moduleId, 1, $now]);
-$secondQuizId = (int)$pdo->lastInsertId();
-$pdo->prepare('INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, 1)')->execute([$secondQuizId, $secondQuestionId]);
+// Module deletion implicitly discards its dependent quiz and preserves unrelated content.
+$moduleId = $insertModule('Module With Quiz');
+$subjectId = $insertSubject($moduleId, 'Module Subject');
+$questionId = $insertQuestion($subjectId, 'mcq', 'Module deletion question');
+[$moduleQuizId, $moduleQuizQuestionId] = $insertQuiz($moduleId, $questionId);
+$unrelatedModuleId = $insertModule('Unrelated Module');
+$unrelatedSubjectId = $insertSubject($unrelatedModuleId, 'Unrelated Subject');
+$unrelatedQuestionId = $insertQuestion($unrelatedSubjectId, 'essay', 'Unrelated question');
+[$unrelatedQuizId] = $insertQuiz($unrelatedModuleId, $unrelatedQuestionId);
 
 $moduleDelete = Academic::deleteModule($moduleId);
-$check($moduleDelete['success'] === false && str_contains($moduleDelete['message'], 'in-progress quiz instance') && !str_contains($moduleDelete['message'], 'active quiz record'), 'Module deletion is rejected safely with current in-progress quiz wording');
-$check((int)Database::fetchOne('SELECT COUNT(*) AS c FROM modules WHERE id = ?', [$moduleId])['c'] === 1 && (int)Database::fetchOne('SELECT COUNT(*) AS c FROM quizzes WHERE id = ?', [$secondQuizId])['c'] === 1, 'Rejected module deletion preserves the module and quiz');
-$pdo->prepare('DELETE FROM quizzes WHERE id = ?')->execute([$secondQuizId]);
-$moduleDelete = Academic::deleteModule($moduleId);
-$check($moduleDelete['success'] === true && (int)Database::fetchOne('SELECT COUNT(*) AS c FROM modules WHERE id = ?', [$moduleId])['c'] === 0, 'Module deletion succeeds after the dependent quiz is removed');
-$check((int)$pdo->query('PRAGMA foreign_key_check')->fetchColumn() === 0, 'Module deletion leaves no foreign-key violations');
+$check($moduleDelete['success'] === true, 'Module deletion succeeds with a dependent in-progress quiz');
+$check((int)$pdo->query('SELECT COUNT(*) FROM quizzes WHERE id = ' . $moduleQuizId)->fetchColumn() === 0, 'Module deletion removes the dependent quiz');
+$check((int)$pdo->query('SELECT COUNT(*) FROM quiz_questions WHERE id = ' . $moduleQuizQuestionId)->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM quiz_answers WHERE quiz_question_id = ' . $moduleQuizQuestionId)->fetchColumn() === 0, 'Module deletion removes dependent quiz links and answers');
+$check((int)$pdo->query('SELECT COUNT(*) FROM modules WHERE id = ' . $unrelatedModuleId)->fetchColumn() === 1 && (int)$pdo->query('SELECT COUNT(*) FROM questions WHERE id = ' . $unrelatedQuestionId)->fetchColumn() === 1 && (int)$pdo->query('SELECT COUNT(*) FROM quizzes WHERE id = ' . $unrelatedQuizId)->fetchColumn() === 1, 'Module deletion preserves unrelated content and quiz');
+
+// Subject deletion implicitly discards only quizzes containing its questions.
+$subjectModuleId = $insertModule('Subject Deletion Module');
+$subjectDeleteId = $insertSubject($subjectModuleId, 'Subject With Quiz');
+$subjectQuestionId = $insertQuestion($subjectDeleteId, 'mcq', 'Subject deletion question');
+[$subjectQuizId, $subjectQuizQuestionId] = $insertQuiz($subjectModuleId, $subjectQuestionId);
+$subjectDelete = Academic::deleteSubject($subjectDeleteId);
+$check($subjectDelete['success'] === true, 'Subject deletion succeeds with a dependent in-progress quiz');
+$check((int)$pdo->query('SELECT COUNT(*) FROM quizzes WHERE id = ' . $subjectQuizId)->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM quiz_questions WHERE id = ' . $subjectQuizQuestionId)->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM quiz_answers WHERE quiz_question_id = ' . $subjectQuizQuestionId)->fetchColumn() === 0, 'Subject deletion removes the quiz, links, and answers');
+$check((int)$pdo->query('SELECT COUNT(*) FROM quizzes WHERE id = ' . $unrelatedQuizId)->fetchColumn() === 1, 'Subject deletion preserves an unrelated quiz');
+
+// Question deletion implicitly discards only quizzes referencing that question.
+$questionModuleId = $insertModule('Question Deletion Module');
+$questionSubjectId = $insertSubject($questionModuleId, 'Question Subject');
+$questionDeleteId = $insertQuestion($questionSubjectId, 'mcq', 'Question with quiz');
+[$questionQuizId, $questionQuizQuestionId] = $insertQuiz($questionModuleId, $questionDeleteId);
+$questionDelete = Question::deleteQuestion($questionDeleteId);
+$check($questionDelete['success'] === true, 'Question deletion succeeds with a dependent in-progress quiz');
+$check((int)$pdo->query('SELECT COUNT(*) FROM questions WHERE id = ' . $questionDeleteId)->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM quizzes WHERE id = ' . $questionQuizId)->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM quiz_questions WHERE id = ' . $questionQuizQuestionId)->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM quiz_answers WHERE quiz_question_id = ' . $questionQuizQuestionId)->fetchColumn() === 0, 'Question deletion removes the question and complete dependent quiz instance');
+$check((int)$pdo->query('SELECT COUNT(*) FROM questions WHERE id = ' . $unrelatedQuestionId)->fetchColumn() === 1 && (int)$pdo->query('SELECT COUNT(*) FROM quizzes WHERE id = ' . $unrelatedQuizId)->fetchColumn() === 1, 'Question deletion preserves unrelated question and quiz');
+
+$check((int)$pdo->query('SELECT COUNT(*) FROM pragma_foreign_key_check')->fetchColumn() === 0, 'Academic deletions leave no foreign-key violations');
 
 echo "Deletion Integrity Test Results: {$passed} Passed, {$failed} Failed" . PHP_EOL;
 exit($failed > 0 ? 1 : 0);

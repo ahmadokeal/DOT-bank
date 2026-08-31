@@ -53,9 +53,9 @@
                 </select>
             </div>
 
-            <div style="display: flex; gap: 0.5rem;">
-                <button type="submit" class="btn btn-primary btn-block">Search / Filter</button>
-                <a href="<?= url('student/questions.php' . ($hasSubject ? '?subject_id=' . (int)$subject['id'] : '')) ?>" class="btn btn-secondary">Reset</a>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-primary" style="flex: 1 1 140px; min-width: 0;">Search / Filter</button>
+                <a href="<?= url('student/questions.php' . ($hasSubject ? '?subject_id=' . (int)$subject['id'] : '')) ?>" class="btn btn-secondary" style="flex: 0 1 auto; min-width: 0;">Reset</a>
             </div>
         </form>
     </div>
@@ -111,12 +111,17 @@
                                 </div>
                             <?php endforeach; ?>
                         </div>
-                    <?php elseif ($type === 'match' && !empty($decoded['left_items']) && !empty($decoded['right_items'])): ?>
+                    <?php elseif ($type === 'match' && !empty($decoded['left_items']) && !empty($decoded['right_items'])): 
+                        $leftDisplay = $decoded['left_items'];
+                        $rightDisplay = $decoded['right_items'];
+                        for ($li = count($leftDisplay) - 1; $li > 0; $li--) { $lj = random_int(0, $li); [$leftDisplay[$li], $leftDisplay[$lj]] = [$leftDisplay[$lj], $leftDisplay[$li]]; }
+                        for ($ri = count($rightDisplay) - 1; $ri > 0; $ri--) { $rj = random_int(0, $ri); [$rightDisplay[$ri], $rightDisplay[$rj]] = [$rightDisplay[$rj], $rightDisplay[$ri]]; }
+                    ?>
                         <div class="student-match-columns">
                             <div>
                                 <strong class="student-match-column-title">Left Column</strong>
                                 <ul class="student-match-list">
-                                    <?php foreach ($decoded['left_items'] as $item): ?>
+                                    <?php foreach ($leftDisplay as $item): ?>
                                         <li class="student-match-item"><?= e($item) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -124,7 +129,7 @@
                             <div>
                                 <strong class="student-match-column-title">Right Column</strong>
                                 <ul class="student-match-list">
-                                    <?php foreach ($decoded['right_items'] as $item): ?>
+                                    <?php foreach ($rightDisplay as $item): ?>
                                         <li class="student-match-item"><?= e($item) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -177,11 +182,11 @@
 
         <!-- Pagination Controls -->
         <?php if ($totalPages > 1): ?>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem;">
+            <div class="question-pagination" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem;">
                 <div>
                     Showing <?= $offset + 1 ?> to <?= min($offset + $limit, $totalQuestions) ?> of <?= $totalQuestions ?> questions
                 </div>
-                <div style="display: flex; gap: 0.35rem;">
+                <div class="question-pagination-links" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                     <?php if ($page > 1): ?>
                         <a href="<?= url('student/questions.php?' . http_build_query(array_merge($filters, ['page' => $page - 1]))) ?>" class="btn btn-secondary btn-sm">&larr; Prev</a>
                     <?php endif; ?>

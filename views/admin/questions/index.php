@@ -171,11 +171,11 @@
 
         <!-- Pagination Controls -->
         <?php if ($totalPages > 1): ?>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); flex-wrap: wrap; gap: 1rem;">
+            <div class="question-pagination" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); flex-wrap: wrap; gap: 1rem;">
                 <div>
                     Showing <?= $offset + 1 ?> to <?= min($offset + $limit, $totalQuestions) ?> of <?= $totalQuestions ?> questions
                 </div>
-                <div style="display: flex; gap: 0.35rem;">
+                <div class="question-pagination-links" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                     <?php if ($page > 1): ?>
                         <a href="<?= url('admin/questions.php?' . http_build_query(array_merge($filters, ['page' => $page - 1]))) ?>" class="btn btn-secondary btn-sm">&larr; Prev</a>
                     <?php endif; ?>

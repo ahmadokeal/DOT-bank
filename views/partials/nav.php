@@ -18,9 +18,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 
         <?php if ($isLoggedIn): ?>
             <button class="nav-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open navigation">
-                <span class="nav-toggle-bar" aria-hidden="true"></span>
-                <span class="nav-toggle-bar" aria-hidden="true"></span>
-                <span class="nav-toggle-bar" aria-hidden="true"></span>
+                <i class="fa-solid fa-bars nav-toggle-icon" aria-hidden="true"></i>
             </button>
 
             <nav id="primary-navigation" aria-label="Primary navigation">
@@ -93,26 +91,3 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
         <?php endif; ?>
     </div>
 </header>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var navigation = document.getElementById('primary-navigation');
-        var toggle = document.querySelector('.nav-toggle');
-        if (!navigation || !toggle) return;
-        toggle.addEventListener('click', function () {
-            var open = navigation.classList.toggle('nav-open');
-            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-        });
-        navigation.querySelectorAll('.nav-link').forEach(function (link) {
-            link.addEventListener('click', function () {
-                navigation.classList.remove('nav-open');
-                toggle.setAttribute('aria-expanded', 'false');
-                toggle.setAttribute('aria-label', 'Open navigation');
-            });
-        });
-        window.addEventListener('resize', function () {
-            if (window.innerWidth > 768) navigation.classList.remove('nav-open');
-        });
-    });
-</script>

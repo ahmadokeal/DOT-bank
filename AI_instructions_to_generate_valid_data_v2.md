@@ -70,7 +70,7 @@ Rules:
 - Omit `answer` or set it to `null` for an unavailable answer. A non-empty valid label produces internal `answer_status = "available"`; the normalized internal `answer_data` stores the choice texts in `options` and the selected choice text—not the label—in `correct_answer`.
 - The importer does not require labels to be consecutive or begin at `A`; each supplied label still must be one uppercase letter. Keep labels unique because JSON object keys are unique.
 
-### 4.2 Match
+### 4.2 Match (one question, pair-level scoring)
 
 External format:
 
@@ -90,13 +90,15 @@ External format:
 
 Rules:
 
+- Match is **one question record**, one quiz question, and one result-review question. Never generate one record per pair.
 - `pairs` must be a non-empty JSON array.
 - Each pair must be an object with non-empty **string** `left` and non-empty **string** `right`; surrounding whitespace is trimmed.
 - Left items must be unique after trimming. **INVALID:** two pairs with the same trimmed `left` text.
 - Right items are collected as provided; the importer does not reject duplicate right texts, although unique right texts are safest for quiz use.
 - If `answer` is omitted, `null`, or the empty string, internal `answer_status = "unavailable"` and normalized `matches = null`.
 - If `answer` is any non-empty value, the importer marks the answer available and automatically creates `matches` from every pair (`left` → `right`). The value itself is not used as the mapping. Use a simple string such as `"provided"`; do not assume labels like `A` are interpreted specially.
-- The normalized internal structure is `left_items`, `right_items`, and `matches`. Quiz grading compares the submitted left-to-right mapping exactly with `matches` (`core/Quiz.php`, `Quiz::submit()`).
+- The normalized internal structure is `left_items`, `right_items`, and `matches`. The mapping must be complete: every left item has exactly one correct right item.
+- During grading, each pair is compared independently with `matches`. Correct pairs receive one scoring unit; incorrect or unanswered pairs receive zero. Partial credit is allowed (`3/4` pairs = `75%` for that Match question). The Match still counts as one question in all UI and question counts.
 
 ### 4.3 Complete, Compare, and Essay
 
@@ -230,7 +232,7 @@ This example uses only the strict external keys and covers all six types, availa
 }
 ```
 
-The example yields five valid normalized records: four with available answers and one unavailable; no IDs; four canonical appearance rows in total; and frequency equal to appearance count for every question that has appearances. The MCQ answer is normalized from label `B` to choice text `Vitamin D`; the Match answer is generated from `pairs` because `answer` is non-empty.
+The example yields five valid normalized records: four with available answers and one unavailable; no IDs; four canonical appearance rows in total; and frequency equal to appearance count for every question that has appearances. The MCQ answer is normalized from label `B` to choice text `Vitamin D`; the Match remains one question and its complete mapping is generated from `pairs` because `answer` is non-empty.
 
 ## 9. Generator checklist
 
@@ -241,7 +243,7 @@ The example yields five valid normalized records: four with available answers an
 - [ ] Every explicit appearance uses exact `source`, integer `year > 0`, and exact `term`.
 - [ ] `frequency` equals the final distinct appearance count whenever appearances exist.
 - [ ] MCQ `choices` is an object with at least two one-uppercase-letter keys; `answer` is an existing label or is omitted/`null`.
-- [ ] Match `pairs` is non-empty, every `left`/`right` is a non-empty string, and left items are unique.
+- [ ] Match is one question; `pairs` is non-empty, every `left`/`right` is a non-empty string, left items are unique, and the pairs contain the complete correct mapping.
 - [ ] Complete/Compare/Essay use answer text or omit/`null` for unavailable answers.
 - [ ] No database IDs, internal `answer_data`, UI labels, guessed source names, or guessed type names appear.
 - [ ] Parse the final file with the current `JsonImporter` before delivery and resolve every invalid record and every frequency error.

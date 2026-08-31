@@ -128,6 +128,13 @@ class Question {
                 if (!is_array($matches) || empty($matches)) {
                     $errors[] = 'Correct matches configuration is required.';
                 } else {
+                    $leftKeys = array_map('strval', $left);
+                    $matchKeys = array_map('strval', array_keys($matches));
+                    sort($leftKeys);
+                    sort($matchKeys);
+                    if ($leftKeys !== $matchKeys) {
+                        $errors[] = 'Every left item must have exactly one correct match.';
+                    }
                     foreach ($matches as $lItem => $rItem) {
                         if (!in_array(trim((string)$lItem), $left, true)) {
                             $errors[] = "Match key \"{$lItem}\" is not present in the left items list.";
@@ -378,7 +385,8 @@ class Question {
     }
 
     /**
-     * Delete a question
+     * Delete a question. Any transient quizzes that reference it are
+     * discarded first.
      */
     public static function deleteQuestion(int $id): array {
         $q = self::getQuestionById($id);
@@ -386,17 +394,17 @@ class Question {
             return ['success' => false, 'message' => 'Question not found.'];
         }
 
-        $usage = Database::fetchOne(
-            'SELECT COUNT(DISTINCT quiz_id) AS cnt FROM quiz_questions WHERE question_id = ?',
-            [$id]
-        );
-        $quizCount = (int)($usage['cnt'] ?? 0);
-        if ($quizCount > 0) {
-            return ['success' => false, 'message' => "Question cannot be deleted because {$quizCount} in-progress quiz instance(s) still reference it. Submit or discard the in-progress quiz first."];
-        }
-
         try {
             return Database::transaction(function (PDO $pdo) use ($id): array {
+                // Quizzes are transient; deleting the parent quiz cascades its links and answers.
+                $pdo->prepare(
+                    'DELETE FROM quizzes
+                     WHERE id IN (
+                         SELECT DISTINCT quiz_id
+                         FROM quiz_questions
+                         WHERE question_id = ?
+                     )'
+                )->execute([$id]);
                 // Delete source information cascade
                 $pdo->prepare('DELETE FROM question_sources WHERE question_id = ?')->execute([$id]);
                 $pdo->prepare('DELETE FROM questions WHERE id = ?')->execute([$id]);

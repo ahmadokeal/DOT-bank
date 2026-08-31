@@ -1,19 +1,19 @@
-<div class="admin-question-form-container" style="max-width: 800px; margin: 0 auto;">
-    <div style="margin-bottom: 1.5rem;">
-        <a href="<?= url('admin/questions.php') ?>" style="font-size: 0.875rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 0.5rem;">
+<div class="admin-question-form-container">
+    <div class="admin-question-form-header">
+        <a href="<?= url('admin/questions.php') ?>" class="admin-question-form-back">
             &larr; Back to Question Bank
         </a>
         <h1><?= $isEdit ? 'Edit Question' : 'Create Question' ?></h1>
-        <p style="color: var(--text-muted);"><?= $isEdit ? 'Update details for Question ID #' . (int)$question['id'] : 'Manually add a medical exam question.' ?></p>
+        <p><?= $isEdit ? 'Update details for Question ID #' . (int)$question['id'] : 'Manually add a medical exam question.' ?></p>
     </div>
 
-    <div class="card">
+    <div class="card admin-question-form-card">
         <form method="POST" action="<?= url('admin/question-form.php' . ($isEdit ? '?id=' . (int)$question['id'] : '')) ?>" id="question-form">
             <?= CSRF::field() ?>
             <input type="hidden" id="is_edit" value="<?= $isEdit ? '1' : '0' ?>">
             <input type="hidden" id="original_type" value="<?= $isEdit ? e($question['type']) : '' ?>">
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="admin-question-form-grid">
                 <!-- Module Selection -->
                 <div class="form-group">
                     <label class="form-label" for="form_module_id">Module <span style="color: var(--error);">*</span></label>
@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="admin-question-form-grid">
                 <!-- Question Type Selection -->
                 <div class="form-group">
                     <label class="form-label" for="type">Question Type <span style="color: var(--error);">*</span></label>
@@ -75,8 +75,17 @@
                  TYPE-SPECIFIC CONDITIONAL FIELD CONTAINERS
                  ========================================== -->
 
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-error admin-question-form-errors" role="alert">
+                    <strong>Please correct the following:</strong>
+                    <ul>
+                        <?php foreach ($errors as $err): ?><li><?= e($err) ?></li><?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
             <!-- Standard text answer container (Complete, Compare, Essay) -->
-            <div id="answer-container-text" class="card type-container" style="background: var(--bg-page); display: none;">
+            <div id="answer-container-text" class="card type-container" style="display: none;">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" for="answer">Correct / Model Answer</label>
                     <textarea id="answer" name="answer" class="form-control" rows="4" placeholder="Enter model answer here..."><?= e($plainAnswer) ?></textarea>
@@ -84,17 +93,17 @@
             </div>
 
             <!-- True / False answer container -->
-            <div id="answer-container-true-false" class="card type-container" style="background: var(--bg-page); display: none;">
-                <h4 style="margin-bottom: 0.75rem;">True / False Configuration</h4>
+            <div id="answer-container-true-false" class="card type-container" style="display: none;">
+                <h4>True / False Configuration</h4>
                 <label style="display: block; margin-bottom: 0.5rem;"><input type="radio" name="answer" value="true" <?= ($plainAnswer === 'true') ? 'checked' : '' ?>> True</label>
                 <label style="display: block;"><input type="radio" name="answer" value="false" <?= ($plainAnswer === 'false') ? 'checked' : '' ?>> False</label>
             </div>
 
             <!-- MCQ Options container -->
-            <div id="answer-container-mcq" class="card type-container" style="background: var(--bg-page); display: none;">
-                <h4 style="margin-bottom: 0.75rem;">MCQ Configuration</h4>
+            <div id="answer-container-mcq" class="card type-container" style="display: none;">
+                <h4>MCQ Configuration</h4>
                 
-                <div id="mcq-options-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+                <div id="mcq-options-wrapper">
                     <!-- Options list populated dynamically by JS -->
                 </div>
 
@@ -102,31 +111,31 @@
             </div>
 
             <!-- Matching Options container -->
-            <div id="answer-container-match" class="card type-container" style="background: var(--bg-page); display: none;">
-                <h4 style="margin-bottom: 0.75rem;">Matching Configuration</h4>
+            <div id="answer-container-match" class="card type-container" style="display: none;">
+                <h4>Matching Configuration</h4>
                 
-                <div class="match-builder-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
+                <div class="match-builder-grid">
                     <div>
-                        <h5 style="margin-bottom: 0.5rem; color: var(--text);">Left-side Items</h5>
-                        <div id="match-left-wrapper" class="match-items-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
+                        <h5>Left-side Items</h5>
+                        <div id="match-left-wrapper" class="match-items-wrapper"></div>
                         <button type="button" id="add-match-left" class="btn btn-secondary btn-sm">+ Add Left Item</button>
                     </div>
                     <div>
-                        <h5 style="margin-bottom: 0.5rem; color: var(--text);">Right-side Items</h5>
-                        <div id="match-right-wrapper" class="match-items-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;"></div>
+                        <h5>Right-side Items</h5>
+                        <div id="match-right-wrapper" class="match-items-wrapper"></div>
                         <button type="button" id="add-match-right" class="btn btn-secondary btn-sm">+ Add Right Item</button>
                     </div>
                 </div>
 
-                <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <h5 style="margin-bottom: 0.5rem;">Correct Matches Mapping</h5>
-                    <div id="matches-mapping-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+                <div class="admin-question-form-divider">
+                    <h5>Correct Matches Mapping</h5>
+                    <div id="matches-mapping-wrapper">
                         <!-- Mappings drop-downs populated dynamically by JS -->
                     </div>
                 </div>
             </div>
 
-            <div style="border-top: 1px solid var(--border); padding-top: 1.25rem; margin-top: 1.5rem;">
+            <div class="admin-question-form-divider">
                 <!-- Frequency -->
                 <div class="form-group">
                     <label class="form-label" for="frequency">Frequency <span style="color: var(--error);">*</span></label>
@@ -137,9 +146,9 @@
             </div>
 
             <?php $formAppearances = is_array($appearances ?? null) ? $appearances : []; ?>
-            <section class="card" style="margin-top: 1.25rem; padding: 1rem;" aria-labelledby="exam-appearances-heading">
-                <h3 id="exam-appearances-heading" style="margin: 0 0 .35rem;">Exam Appearances</h3>
-                <p class="form-help" style="margin-bottom: .85rem;">Optional. Add one row for each exam in which this question appeared. Each row counts toward Frequency.</p>
+            <section class="card admin-appearances-card" aria-labelledby="exam-appearances-heading">
+                <h3 id="exam-appearances-heading">Exam Appearances</h3>
+                <p class="form-help">Optional. Add one row for each exam in which this question appeared. Each row counts toward Frequency.</p>
                 <?php if ($formAppearances): ?><p class="form-help"><strong>Recorded appearances: <?= count($formAppearances) ?>. Frequency is synchronized to this count.</strong></p><?php endif; ?>
                 <div id="appearance-list">
                     <?php foreach ($formAppearances as $index => $appearance):
@@ -147,10 +156,10 @@
                         $appearanceYear = $appearance['exam_year'] ?? $appearance['year'] ?? '';
                         $appearanceTerm = $appearance['exam_term'] ?? $appearance['term'] ?? '';
                     ?>
-                        <div class="appearance-row" data-appearance-row style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: .75rem; align-items: end; margin-bottom: .75rem;">
-                            <div class="form-group" style="margin: 0;"><label class="form-label">Source</label><select name="appearances[<?= (int)$index ?>][source_name]" class="form-control" required><option value="">-- Select source --</option><option value="final" <?= $appearanceSource === 'final' ? 'selected' : '' ?>>Final</option><option value="end_module" <?= $appearanceSource === 'end_module' ? 'selected' : '' ?>>End Module</option></select></div>
-                            <div class="form-group" style="margin: 0;"><label class="form-label">Year</label><input name="appearances[<?= (int)$index ?>][exam_year]" type="number" min="1900" max="2200" class="form-control" value="<?= e((string)$appearanceYear) ?>" required></div>
-                            <div class="form-group" style="margin: 0;"><label class="form-label">Term</label><select name="appearances[<?= (int)$index ?>][exam_term]" class="form-control" required><option value="">-- Select term --</option><option value="first" <?= $appearanceTerm === 'first' ? 'selected' : '' ?>>First</option><option value="second" <?= $appearanceTerm === 'second' ? 'selected' : '' ?>>Second</option></select></div>
+                        <div class="appearance-row" data-appearance-row>
+                            <div class="form-group"><label class="form-label">Source</label><select name="appearances[<?= (int)$index ?>][source_name]" class="form-control" required><option value="">-- Select source --</option><option value="final" <?= $appearanceSource === 'final' ? 'selected' : '' ?>>Final</option><option value="end_module" <?= $appearanceSource === 'end_module' ? 'selected' : '' ?>>End Module</option></select></div>
+                            <div class="form-group"><label class="form-label">Year</label><input name="appearances[<?= (int)$index ?>][exam_year]" type="number" min="1900" max="2200" class="form-control" value="<?= e((string)$appearanceYear) ?>" required></div>
+                            <div class="form-group"><label class="form-label">Term</label><select name="appearances[<?= (int)$index ?>][exam_term]" class="form-control" required><option value="">-- Select term --</option><option value="first" <?= $appearanceTerm === 'first' ? 'selected' : '' ?>>First</option><option value="second" <?= $appearanceTerm === 'second' ? 'selected' : '' ?>>Second</option></select></div>
                             <button type="button" class="btn btn-secondary btn-sm" data-remove-appearance>Remove</button>
                         </div>
                     <?php endforeach; ?>
@@ -159,7 +168,7 @@
                 <button type="button" class="btn btn-secondary btn-sm" id="add-exam-appearance">+ Add Exam Appearance</button>
             </section>
 
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+            <div class="admin-question-form-actions">
                 <a href="<?= url('admin/questions.php') ?>" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary" id="submit-btn">
                     <?= $isEdit ? 'Save Changes' : 'Create Question' ?>
@@ -535,8 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('div');
         row.className = 'appearance-row';
         row.dataset.appearanceRow = '';
-        row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.75rem;align-items:end;margin-bottom:.75rem;';
-        row.innerHTML = `<div class="form-group" style="margin:0"><label class="form-label">Source</label><select name="appearances[${index}][source_name]" class="form-control" required><option value="">-- Select source --</option><option value="final">Final</option><option value="end_module">End Module</option></select></div><div class="form-group" style="margin:0"><label class="form-label">Year</label><input name="appearances[${index}][exam_year]" type="number" min="1900" max="2200" class="form-control" required></div><div class="form-group" style="margin:0"><label class="form-label">Term</label><select name="appearances[${index}][exam_term]" class="form-control" required><option value="">-- Select term --</option><option value="first">First</option><option value="second">Second</option></select></div><button type="button" class="btn btn-secondary btn-sm" data-remove-appearance>Remove</button>`;
+        row.innerHTML = `<div class="form-group"><label class="form-label">Source</label><select name="appearances[${index}][source_name]" class="form-control" required><option value="">-- Select source --</option><option value="final">Final</option><option value="end_module">End Module</option></select></div><div class="form-group"><label class="form-label">Year</label><input name="appearances[${index}][exam_year]" type="number" min="1900" max="2200" class="form-control" required></div><div class="form-group"><label class="form-label">Term</label><select name="appearances[${index}][exam_term]" class="form-control" required><option value="">-- Select term --</option><option value="first">First</option><option value="second">Second</option></select></div><button type="button" class="btn btn-secondary btn-sm" data-remove-appearance>Remove</button>`;
         list.appendChild(row); refresh();
     };
     addButton.addEventListener('click', addRow);

@@ -8,4 +8,4 @@
         </div>
     </div>
 </footer>
-<script src="<?= url('assets/js/app.js') ?>"></script>
+<script src="<?= url('assets/js/app.js?v=nav-toggle-fa-1') ?>"></script>

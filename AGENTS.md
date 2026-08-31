@@ -27,16 +27,16 @@ Module (Medical System / Discipline)
 
 ## 2. Current Project Status
 
-- **Current Active Phase**: **Phase 7 Core UI foundation completed** — the approved Student Dashboard visual language has been propagated across the shared Core UI, with responsive Match-question containment and project documentation added. Quiz Builder, Quiz Taking, and Quiz Result remain a separate UI pass except for the focused Match responsive fix.
+- **Current Active Phase**: **Phase 7 Core UI + Student Quiz UI + Arabic RTL Landing Page completed** — Student Dashboard language propagated across shared Core UI, Match responsive containment added, and Student Quiz Builder (hierarchy/polish), Quiz Taking (complete redesign), Quiz Confirmation (review/summary), Quiz Result Review (status-aware per-pair), Match display randomization (Fisher-Yates, session-preserved), Match partial-credit scoring fix, and Arabic RTL public landing page delivered. All responsive at 320-1280.
 - **Phase 1 (Foundation)**: Completed & verified (83/83 automated tests passed).
 - **Phase 2 (Academic Structure)**: Completed & verified (38/38 automated tests passed).
 - **Phase 3 (Question Bank)**: Completed & verified (92/92 automated tests passed).
-- **Phase 4 (JSON Import)**: Completed & verified (15/15 dedicated assertions).
-- **Phase 5 (Quiz Engine)**: Completed & verified (27/27 dedicated assertions).
-- **Phase 6 (Grading & Immediate Results)**: Completed & verified (19/19 dedicated assertions; persistent Quiz History removed).
+- **Phase 4 (JSON Import)**: Completed & verified (16/16 dedicated assertions).
+- **Phase 5 (Quiz Engine)**: Completed & verified (30/30 dedicated assertions).
+- **Phase 6 (Grading & Immediate Results)**: Completed & verified (20/20 dedicated assertions; persistent Quiz History removed).
 - **Pre-Phase 7 Hardening**: Completed & verified (29/29 dedicated assertions).
-- **Additional Test Suites**: Exam Appearances (19), Frequency Consistency (18), Deletion Integrity (11), Manual Import Fixture (15).
-- **Total Verified Assertions**: 389 across all test suites (0 failures).
+- **Additional Test Suites**: True / False (20), Exam Appearances (19), Frequency Consistency (18), Deletion Integrity (11), Manual Import Fixture (15), Match Scoring (20), Match Display Order (16).
+- **Total Verified Assertions**: 427 across all test suites (0 failures).
 
 ---
 
@@ -104,7 +104,7 @@ DOT Bank/
 │   │   ├── quiz-submit.php   # Student quiz submission controller
 │   │   ├── quiz-result.php   # Student quiz result controller
 │   │   └── quiz-discard.php  # Student active quiz discard controller
-│   ├── index.php             # Public entry point router
+│   ├── index.php             # Public entry point: Arabic RTL landing page (unauthenticated) / dashboard redirect (authenticated)
 │   ├── login.php             # User login controller
 │   ├── register.php          # Student registration controller
 │   ├── logout.php            # Logout controller
@@ -223,8 +223,9 @@ DOT Bank/
   - **Closest-possible fallback**: greedy single-question allocation minimizing squared deviation from requested subject/type counts, restricted to explicitly requested dimensions.
 - Question selection: Fisher-Yates shuffle using `random_int()` after allocation; duplicate IDs rejected.
 - Quiz persistence: writes `quizzes` and ordered `quiz_questions` in a single transaction.
-- Submission & grading: validates answer formats, auto-grades MCQ (exact option match), Match (exact mapping match), and True / False (exact `true`/`false` string match), stores self-graded types with `is_correct = NULL`, and calculates objective score (% correct of auto-graded only).
-- Transient lifecycle: an existing quiz row is in progress; submission or discard transactionally deletes the quiz, question links, and answer rows after preparing the immediate result. No persistent history exists.
+- Match display randomization: Fisher-Yates (`random_int`) left/right independently shuffled per Match question; canonical `left_items/right_items/matches` never mutated; Student Browse shuffles per request, Quiz Taking generates once per `quizId/qqId` and preserves in `$_SESSION['_quiz_match_display'][$quizId][$qqId]` for stable refresh and Result Review.
+- Submission & grading: validates answer formats, auto-grades MCQ (exact option match), Match per pair (partial credit, each pair 1 scoring unit, `match_correct_pairs/match_total_pairs/match_pair_results` ordered by display-left with fallback to canonical), and True / False (exact `true`/`false` string match), stores self-graded types with `is_correct = NULL`, and calculates objective score (`correct_units / total_auto_graded_units *100`, `total_units = MCQ 1 + True/False 1 + Match pairs`) with existing rounding.
+- Transient lifecycle: an existing quiz row is in progress; submission or discard transactionally deletes the quiz, question links, and answer rows after preparing the immediate result and cleans `$_SESSION['_quiz_match_display'][$quizId]`. No persistent history exists.
 - Active quiz discard endpoint (CSRF-protected, student-owned).
 
 ### 8. `core/JsonImporter.php`
@@ -317,9 +318,9 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Persistence**: `quizzes` + `quiz_questions` written in single transaction.
 
 **Phase 6 — Grading & Immediate Results**
-- **Auto-grading**: MCQ (exact option match), Match (exact mapping match), and True / False (exact normalized string match).
+- **Auto-grading**: MCQ (exact option match), Match per pair with partial credit, and True / False (exact normalized string match).
 - **Self-graded**: Complete, Compare, Essay stored with `is_correct = NULL`.
-- **Scoring**: Objective percentage = (correct / auto-graded) × 100; NULL if no auto-graded questions.
+- **Scoring**: Objective percentage = (correct auto-graded scoring units / total auto-graded scoring units) × 100; Match remains one question while each pair is one scoring unit. NULL if no auto-graded units exist.
 - **Transient Lifecycle**: Existing quiz rows are in-progress; submission or discard transactionally removes the quiz, question links, and answer rows; no persistent history.
 - **Result Review**: Immediate read-only result with per-question correct answers and student responses.
 - **Idempotency**: Existing answer rows make repeat submissions fail safely.
@@ -330,7 +331,7 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Deletion Integrity**: Pre-flight quiz dependency checks before question/subject/module deletion; controlled error instead of FK violation.
 - **UX Fixes**: Match answer placeholder, "Accept and Start Quiz" wording, subject names in closest previews, improved JSON preview impact reporting, Frequency/Exam Appearance help text.
 
-### ✅ Phase 7 Core UI Foundation — Completed
+### ✅ Phase 7 Core UI + Student Quiz UI — Completed
 - **Vanilla CSS Foundation**: Shared medical/academic design tokens and reusable primitives are maintained in both CSS asset paths used by the root and `public/` entry points.
 - **Responsive Navbar**: Role-aware navigation links are preserved with a Vanilla HTML/CSS/JS mobile menu and accessible state updates.
 - **Core UI Redesign**: Admin/student dashboards, academic catalogs, question-bank surfaces, forms, tables, cards, alerts, empty states, and responsive presentation use the shared Vanilla CSS system. The approved Student Dashboard is the visual reference for colors, typography, spacing, surfaces, borders, shadows, buttons, icons, hierarchy, and responsive behavior; no separate palette or design direction should be introduced for Core UI pages.
@@ -339,8 +340,11 @@ Indexes exist on all foreign keys (`module_id`, `subject_id`, `question_id`, `qu
 - **Long-Text Containment**: Shared content containers use `min-width: 0` and scoped wrapping rules so normal text and extremely long unbroken strings remain inside their containers without truncation or ellipsis. Match item layouts use responsive grid constraints and wrapping labels/selects.
 - **CSS Organization**: Reusable presentation patterns are extracted into shared classes in `app.css`; page-specific styling remains local where it is genuinely unique. Avoid adding new inline styles when an existing shared component or a small reusable class is appropriate.
 - **Documentation**: `README.md` documents the verified architecture, setup, supported question types, import contract, testing, security, and development workflow.
-- **Quiz UI Scope**: Quiz Builder, Quiz Taking, and Quiz Result presentation remain reserved for a dedicated follow-up pass; the Match responsive fix is limited to preventing long item overflow and preserving existing quiz behavior.
+- **Student Quiz UI (Builder/Taking/Confirmation/Result):** Complete redesign of Quiz Taking header, progress, question cards, MCQ/True-False/Match/textarea answer areas, submit/discard, plus polished Builder hierarchy, Confirmation summary, and Result Review status-aware per-pair Match review — all Vanilla CSS, responsive 320-1280, long-text safe, no inline bloat.
+- **Match Display Randomization:** Fisher-Yates (`random_int`) left/right independently shuffled per Match; Student Browse per-request, Quiz Taking per-quiz preserved in `$_SESSION['_quiz_match_display']` for stable Result Review; canonical `matches` unchanged, grading canonical.
+- **Match Partial-Credit Scoring Fix:** Result summary now uses scoring units (`auto_graded = MCQ 1 + True/False 1 + Match pairs`), `correct/incorrect/unanswered` per-pair, `score = correct/auto*100`, visible Q count remains question count.
 - **Test Database Isolation**: All regression suites load `tests/bootstrap.php`, which runs them from a temporary application copy with a disposable SQLite database and installation lock. Tests must never modify `storage/dot_bank.sqlite` or `storage/installed.lock`.
+- **Arabic RTL Public Landing Page:** `public/index.php` now serves a complete Arabic RTL landing page for unauthenticated visitors (hero, features, question types, how-it-works, final CTA, footer), while authenticated users redirect to their dashboards. Built with Vanilla CSS using existing design tokens; no new CSS framework; responsive 320-1280.
 
 ---
 
@@ -373,7 +377,7 @@ Future agents MUST adhere to these rules without alteration:
 | **Phase 5** | Quiz Engine (Constraints, Exact & Closest Modes, Shuffling, Interface) | **Completed** |
 | **Phase 6** | Grading & Immediate Results (Auto/Self Grading, Review, Transient Lifecycle) | **Completed** |
 | **Pre-Phase 7** | Hardening (Exam Appearances CRUD, Frequency Sync, Deletion Integrity, UX Fixes) | **Completed** |
-| **Phase 7** | Polish & UI Optimization (Vanilla CSS foundation, responsive Navbar, Core UI, approved Student Dashboard visual propagation, CSS organization, long-text containment; quiz UI remains reserved except Match responsive containment) | **Core UI Completed** |
+| **Phase 7** | Polish & UI Optimization (Vanilla CSS foundation, responsive Navbar, Core UI, approved Student Dashboard visual propagation, CSS organization, long-text containment, Student Quiz UI Builder/Taking/Confirmation/Result redesign, Match display randomization & partial-credit scoring fix, Arabic RTL public landing page) | **Completed — Core UI + Quiz UI + Match randomization + Landing Page (427 assertions)** |
 | **Phase 8** | Final Verification & Delivery | **Not Started** |
 
 ---
@@ -395,17 +399,23 @@ Every suite uses the shared disposable test bootstrap and is safe to run without
 # Run Phase 3 Question Bank tests (92 assertions)
 & "D:\xampp\php\php.exe" tests\phase3_test.php
 
-# Run Phase 4 JSON Import tests (15 assertions)
+# Run Phase 4 JSON Import tests (16 assertions)
 & "D:\xampp\php\php.exe" tests\phase4_test.php
 
-# Run Phase 5 Quiz Engine tests (27 assertions)
+# Run Phase 5 Quiz Engine tests (30 assertions)
 & "D:\xampp\php\php.exe" tests\phase5_test.php
 
-# Run Phase 6 Grading & Results tests (19 assertions)
+# Run Phase 6 Grading & Results tests (20 assertions)
 & "D:\xampp\php\php.exe" tests\phase6_test.php
 
 # Run Pre-Phase 7 Hardening tests (29 assertions)
 & "D:\xampp\php\php.exe" tests\pre_phase7_hardening_test.php
+
+# Run Match Scoring tests (20 assertions)
+& "D:\xampp\php\php.exe" tests\match_scoring_test.php
+
+# Run Match Display Order tests (16 assertions)
+& "D:\xampp\php\php.exe" tests\match_display_order_test.php
 ```
 
 ### Verified Test Results
@@ -413,15 +423,17 @@ Every suite uses the shared disposable test bootstrap and is safe to run without
 - **`tests/phase2_test.php`**: **38 Passed, 0 Failed** (Module CRUD, duplicate prevention, Subject CRUD, parent module relationships, module filtering, safe cascade deletion, student read-only browsing, admin authorization).
 - **`tests/phase3_test.php`**: **92 Passed, 0 Failed** (Regression coverage for the original five types; True / False coverage is in `tests/true_false_test.php`, including available/unavailable CRUD, strict validation, filtering, import, quiz planning, taking, grading, results, and migration integrity).
 - **`tests/phase4_test.php`**: **16 Passed, 0 Failed** (JSON parsing, validation, preview, import, legacy normalization, module-subject scope).
-- **`tests/phase5_test.php`**: **29 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration; True / False planner and grading coverage is in `tests/true_false_test.php`).
-- **`tests/phase6_test.php`**: **19 Passed, 0 Failed** (Auto/self grading, transient lifecycle, deletion integrity, result review; True / False objective grading and result coverage is in `tests/true_false_test.php`).
+- **`tests/phase5_test.php`**: **30 Passed, 0 Failed** (Exact/closest planning, uneven subject splits, MCQ/Match grading, discard, UI integration; True / False planner and grading coverage is in `tests/true_false_test.php`).
+- **`tests/phase6_test.php`**: **20 Passed, 0 Failed** (Auto/self grading, transient lifecycle, deletion integrity, result review; True / False objective grading and result coverage is in `tests/true_false_test.php`).
 - **`tests/pre_phase7_hardening_test.php`**: **29 Passed, 0 Failed** (Hardening assertions across all prior phases).
 - **`tests/exam_appearances_test.php`**: **19 Passed, 0 Failed** (Exam Appearances CRUD, validation, UI).
 - **`tests/frequency_consistency_test.php`**: **18 Passed, 0 Failed** (Frequency/appearance sync, repair tool).
 - **`tests/deletion_integrity_test.php`**: **11 Passed, 0 Failed** (Academic deletion pre-flight checks).
 - **`tests/manual_import_fixture_test.php`**: **15 Passed, 0 Failed** (Manual JSON import fixture scenarios).
 - **`tests/true_false_test.php`**: **20 Passed, 0 Failed** (True / False CRUD, validation, boolean import normalization, filtering, quiz planning/taking, correct/wrong/unanswered grading, result status, unavailable-answer lifecycle, and migration integrity).
-- **Total Assertions**: **389 Passed, 0 Failed** across all test suites.
+- **`tests/match_scoring_test.php`**: **20 Passed, 0 Failed** (Match per-pair partial credit, 4-pair fixtures, mixed MCQ/TrueFalse/Match 6-unit scoring, result pair-level review, JSON import, cleanup).
+- **`tests/match_display_order_test.php`**: **16 Passed, 0 Failed** (Canonical unchanged, left/right permutation validity, independent shuffles, positional mismatch, canonical grading, result display-order preservation).
+- **Total Assertions**: **427 Passed, 0 Failed** across all test suites.
 
 ---
 
@@ -565,16 +577,23 @@ When working on this codebase:
   - Added responsive Match-question styles in mirrored `quiz-match-responsive.css` files and responsive Student Match browsing styles in mirrored `student-match-responsive.css` files.
   - Added `README.md` with verified project architecture, setup, features, security, testing, and workflow documentation.
   - Verified the complete documented test set at 389 passed assertions and 0 failures; PHP syntax checks and `git diff --check` passed.
+- **2026-08-31 — Phase 7 Arabic RTL Public Landing Page Completed**:
+  - Converted `public/index.php` from a simple redirect to a full Arabic RTL landing page for unauthenticated visitors (hero, features, question types, how-it-works, final CTA, footer), while authenticated users redirect to their dashboards.
+  - Built with Vanilla CSS using existing design tokens (`--primary: #6547d9`, `--accent: #f19a6b`, `--dark: #182230`, `--bg-page: #f7f6f2`); no new CSS framework; responsive 320-1280.
+  - Added landing page styles to `assets/css/app.css` and synchronized to `public/assets/css/app.css`.
+  - No authentication, routing, backend, or database changes. All regression tests pass (427 assertions).
 
 ---
 
-## 16. Phase 7 Branching & Development Protocol
+## 16. Phase 7 Branching & Development Protocol (Historical)
+
+Phase 7 development is **complete**. The following protocol was followed during Phase 7:
 
 | Rule | Detail |
 |------|--------|
-| **Development Branch** | Phase 7 development happens on the `phase7` branch. |
+| **Development Branch** | Phase 7 development happened on the `phase7` branch. |
 | **Production Branch** | `main` is the stable/production branch and must NOT receive direct Phase 7 development commits. |
-| **Testing** | All Phase 7 changes must be tested (automated + browser QA) before merging. |
+| **Testing** | All Phase 7 changes were tested (automated + browser QA) before merging. |
 | **Push Policy** | Push `phase7` work to the remote `phase7` branch only. Never push Phase 7 commits to `main`. |
 | **Merge Policy** | `main` receives Phase 7 only after review, full regression testing, browser QA, and explicit approval. |
 | **Deployment** | Do not deploy Phase 7 to live hosting until it passes all required verification on `main`. |
