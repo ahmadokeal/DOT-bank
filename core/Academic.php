@@ -123,7 +123,8 @@ class Academic {
     }
 
     /**
-     * Delete a module and all associated subjects safely
+     * Delete a module and all associated subjects safely.
+     * Any transient quizzes that depend on the module are discarded first.
      */
     public static function deleteModule(int $id): array {
         $module = Database::fetchOne('SELECT id, name FROM modules WHERE id = ?', [$id]);
@@ -132,13 +133,20 @@ class Academic {
         }
 
         $subjectCount = (int)(Database::fetchOne('SELECT COUNT(*) as cnt FROM subjects WHERE module_id = ?', [$id])['cnt'] ?? 0);
-        $dependentQuizCount = self::countDependentQuizzesForModule($id);
-        if ($dependentQuizCount > 0) {
-            return ['success' => false, 'message' => "Module cannot be deleted because {$dependentQuizCount} active quiz record(s) contain its questions or belong to this module. Finish or cancel the active quiz first."];
-        }
-
         try {
             Database::transaction(function (PDO $pdo) use ($id): void {
+                // Quizzes are transient; deleting the parent quiz cascades its links and answers.
+                $pdo->prepare(
+                    'DELETE FROM quizzes
+                     WHERE id IN (
+                         SELECT DISTINCT qz.id
+                         FROM quizzes qz
+                         LEFT JOIN quiz_questions qq ON qq.quiz_id = qz.id
+                         LEFT JOIN questions q ON q.id = qq.question_id
+                         LEFT JOIN subjects s ON s.id = q.subject_id
+                         WHERE qz.module_id = ? OR s.module_id = ?
+                     )'
+                )->execute([$id, $id]);
                 // Questions and subjects are removed by the existing SQLite cascades.
                 $pdo->prepare('DELETE FROM subjects WHERE module_id = ?')->execute([$id]);
                 $pdo->prepare('DELETE FROM modules WHERE id = ?')->execute([$id]);
@@ -311,20 +319,26 @@ class Academic {
     }
 
     /**
-     * Delete a subject
+     * Delete a subject. Any transient quizzes that depend on its questions
+     * are discarded first.
      */
     public static function deleteSubject(int $id): array {
         $subject = Database::fetchOne('SELECT id, name FROM subjects WHERE id = ?', [$id]);
         if (!$subject) {
             return ['success' => false, 'message' => 'Subject not found.'];
         }
-        $dependentQuizCount = self::countDependentQuizzesForSubject($id);
-        if ($dependentQuizCount > 0) {
-            return ['success' => false, 'message' => "Subject cannot be deleted because {$dependentQuizCount} active quiz record(s) contain its questions. Finish or cancel the active quiz first."];
-        }
-
         try {
             Database::transaction(function (PDO $pdo) use ($id): void {
+                // Quizzes are transient; deleting the parent quiz cascades its links and answers.
+                $pdo->prepare(
+                    'DELETE FROM quizzes
+                     WHERE id IN (
+                         SELECT DISTINCT qq.quiz_id
+                         FROM quiz_questions qq
+                         JOIN questions q ON q.id = qq.question_id
+                         WHERE q.subject_id = ?
+                     )'
+                )->execute([$id]);
                 // Questions belonging to the subject are removed by the existing SQLite cascade.
                 $pdo->prepare('DELETE FROM subjects WHERE id = ?')->execute([$id]);
             });
@@ -335,27 +349,4 @@ class Academic {
         return ['success' => true, 'message' => "Subject \"{$subject['name']}\" was deleted successfully."];
     }
 
-    private static function countDependentQuizzesForSubject(int $subjectId): int {
-        $row = Database::fetchOne(
-            'SELECT COUNT(DISTINCT qq.quiz_id) AS cnt
-             FROM quiz_questions qq
-             JOIN questions q ON q.id = qq.question_id
-             WHERE q.subject_id = ?',
-            [$subjectId]
-        );
-        return (int)($row['cnt'] ?? 0);
-    }
-
-    private static function countDependentQuizzesForModule(int $moduleId): int {
-        $row = Database::fetchOne(
-            'SELECT COUNT(DISTINCT qz.id) AS cnt
-             FROM quizzes qz
-             LEFT JOIN quiz_questions qq ON qq.quiz_id = qz.id
-             LEFT JOIN questions q ON q.id = qq.question_id
-             LEFT JOIN subjects s ON s.id = q.subject_id
-             WHERE qz.module_id = ? OR s.module_id = ?',
-            [$moduleId, $moduleId]
-        );
-        return (int)($row['cnt'] ?? 0);
-    }
 }

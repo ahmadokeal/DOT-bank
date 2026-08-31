@@ -9,7 +9,7 @@ declare(strict_types=1);
  * available cell with the lowest deterministic squared deviation score.
  */
 class Quiz {
-    public const TYPES = ['mcq', 'complete', 'match', 'compare', 'essay'];
+    public const TYPES = ['mcq', 'complete', 'match', 'compare', 'essay', 'true_false'];
 
     public static function availability(int $moduleId, array $subjectIds): array {
         $subjectIds = self::subjectScope($moduleId, $subjectIds);
@@ -107,7 +107,7 @@ class Quiz {
         try {
             return Database::transaction(function(PDO $pdo) use($quizId,$userId,$answers){
                 $quiz=Database::fetchOne('SELECT * FROM quizzes WHERE id=? AND user_id=?',[$quizId,$userId]);
-                if(!$quiz || $quiz['completed_at']) return self::fail('This quiz is unavailable for submission.');
+                if(!$quiz) return self::fail('This in-progress quiz is unavailable for submission.');
                 $questions=Database::fetchAll('SELECT qq.id quiz_question_id,qq.question_order,q.* FROM quiz_questions qq JOIN questions q ON q.id=qq.question_id WHERE qq.quiz_id=? ORDER BY qq.question_order',[$quizId]);
                 if(!$questions) return self::fail('This quiz contains no questions.');
                 $existing=Database::fetchOne('SELECT 1 FROM quiz_answers WHERE quiz_question_id IN (SELECT id FROM quiz_questions WHERE quiz_id=?) LIMIT 1',[$quizId]);
@@ -117,13 +117,55 @@ class Quiz {
                     $raw=$answers[(int)$q['quiz_question_id']]??null;$data=json_decode($q['answer_data']??'',true)?:[];$isCorrect=null;$stored='';
                     if($q['type']==='mcq'){
                         if(is_array($raw)) throw new InvalidArgumentException('Invalid MCQ answer format.');$stored=trim((string)($raw??''));$options=$data['options']??[];if($stored!==''&&!in_array($stored,$options,true))throw new InvalidArgumentException('Invalid MCQ answer.');$isCorrect=($stored!==''&&$stored===($data['correct_answer']??null))?1:0;$auto++;if($isCorrect===0)$unanswered+=($stored==='')?1:0;else $correct++;
+                    } elseif($q['type']==='true_false'){
+                        if(is_array($raw)) throw new InvalidArgumentException('Invalid True/False answer format.');$stored=strtolower(trim((string)($raw??'')));if($stored!==''&&!in_array($stored,['true','false'],true))throw new InvalidArgumentException('Invalid True/False answer.');$isCorrect=($stored!==''&&$stored===($data['answer']??null))?1:0;$auto++;if($isCorrect===1)$correct++;elseif($stored==='')$unanswered++;
                     } elseif($q['type']==='match'){
-                        if($raw===null||$raw==='')$raw=[];if(!is_array($raw))throw new InvalidArgumentException('Invalid Match answer format.');if($raw!==[]&&count(array_filter($raw,fn($value)=>trim((string)$value)!==''))===0)$raw=[];$left=$data['left_items']??[];$right=$data['right_items']??[];foreach($raw as $key=>$value)if(!in_array((string)$key,$left,true)||!in_array((string)$value,$right,true))throw new InvalidArgumentException('Invalid Match answer.');$stored=json_encode($raw,JSON_UNESCAPED_UNICODE);$expected=$data['matches']??null;if(is_array($expected)){$a=$raw;$b=$expected;ksort($a);ksort($b);$isCorrect=($raw!==[]&&$a===$b)?1:0;}else{$isCorrect=0;}$auto++;if($isCorrect===1)$correct++;elseif($raw===[])$unanswered++;
+                        if($raw===null||$raw==='')$raw=[];
+                        if(!is_array($raw))throw new InvalidArgumentException('Invalid Match answer format.');
+                        $left=array_values(array_map('strval',$data['left_items']??[]));
+                        $right=array_values(array_map('strval',$data['right_items']??[]));
+                        $submitted=[];
+                        foreach($raw as $key=>$value){
+                            $key=(string)$key;$value=trim((string)$value);
+                            if($value==='')continue;
+                            if(!in_array($key,$left,true)||!in_array($value,$right,true))throw new InvalidArgumentException('Invalid Match answer.');
+                            $submitted[$key]=$value;
+                        }
+                        $expected=is_array($data['matches']??null)?$data['matches']:null;
+                        $pairResults=[];$matchCorrect=0;$matchUnanswered=0;
+                        // Preserve randomized display order for result review if available (transient, session-scoped)
+                        $displayLeft = $_SESSION['_quiz_match_display'][$quizId][(int)$q['quiz_question_id']]['left'] ?? null;
+                        $orderedLeft = (is_array($displayLeft) && count($displayLeft) === count($left) && count(array_diff($left, $displayLeft)) === 0) ? $displayLeft : $left;
+                        foreach($orderedLeft as $leftItem){
+                            $studentValue=$submitted[$leftItem]??null;
+                            $correctValue=is_array($expected)&&array_key_exists($leftItem,$expected)?(string)$expected[$leftItem]:null;
+                            $pairCorrect=$correctValue!==null&&$studentValue!==null&&$studentValue===$correctValue;
+                            if($pairCorrect)$matchCorrect++;elseif($studentValue===null)$matchUnanswered++;
+                            $pairResults[]=['left'=>$leftItem,'student_answer'=>$studentValue,'correct_answer'=>$correctValue,'is_correct'=>$pairCorrect?1:0];
+                        }
+                        $matchTotal=count($left);$auto+=$matchTotal;$correct+=$matchCorrect;$unanswered+=$matchUnanswered;
+                        $isCorrect=$matchTotal>0&&$matchCorrect===$matchTotal?1:0;
+                        $stored=json_encode($submitted,JSON_UNESCAPED_UNICODE);
+                        $q['match_correct_pairs']=$matchCorrect;$q['match_total_pairs']=$matchTotal;$q['match_pair_results']=$pairResults;
+                        // Clean up display order after use (result payload retains ordered pairResults)
+                        unset($_SESSION['_quiz_match_display'][$quizId][(int)$q['quiz_question_id']]);
                     } else {
                         if(is_array($raw))throw new InvalidArgumentException('Invalid self-graded answer format.');$stored=trim((string)($raw??''));$self++;
                     }
                     $stmt->execute([(int)$q['quiz_question_id'],$stored,$isCorrect]);
                     $q['student_answer']=$stored;$q['is_correct']=$isCorrect;$q['answer_data_decoded']=$data;$reviewQuestions[]=$q;
+                }
+                // Clean up any remaining display order for this quiz (transient)
+                if (isset($_SESSION['_quiz_match_display'][$quizId]) && empty($_SESSION['_quiz_match_display'][$quizId])) {
+                    unset($_SESSION['_quiz_match_display'][$quizId]);
+                } elseif (isset($_SESSION['_quiz_match_display'][$quizId])) {
+                    // Ensure stale entries are removed even if some questions were not Match
+                    foreach (array_keys($_SESSION['_quiz_match_display'][$quizId]) as $qqId) {
+                        $found = false;
+                        foreach ($reviewQuestions as $rq) if ((int)$rq['quiz_question_id'] === (int)$qqId) { $found = true; break; }
+                        if (!$found) unset($_SESSION['_quiz_match_display'][$quizId][$qqId]);
+                    }
+                    if (empty($_SESSION['_quiz_match_display'][$quizId])) unset($_SESSION['_quiz_match_display'][$quizId]);
                 }
                 $score=$auto>0?round(($correct/$auto)*100,2):null;
                 $module=Database::fetchOne('SELECT name FROM modules WHERE id=?',[(int)$quiz['module_id']]);
@@ -139,9 +181,9 @@ class Quiz {
     public static function discard(int $quizId,int $userId): array {
         try {
             return Database::transaction(function(PDO $pdo) use($quizId,$userId){
-                $stmt=$pdo->prepare('DELETE FROM quizzes WHERE id=? AND user_id=? AND completed_at IS NULL');
+                $stmt=$pdo->prepare('DELETE FROM quizzes WHERE id=? AND user_id=?');
                 $stmt->execute([$quizId,$userId]);
-                return $stmt->rowCount()===1?['success'=>true,'message'=>'Quiz discarded successfully.']:self::fail('This quiz is unavailable or has already been completed.');
+                return $stmt->rowCount()===1?['success'=>true,'message'=>'Quiz discarded successfully.']:self::fail('This in-progress quiz is unavailable or has already been discarded.');
             });
         } catch(Throwable $e) { error_log('Quiz discard failed: '.$e->getMessage()); return self::fail('The quiz could not be discarded.'); }
     }

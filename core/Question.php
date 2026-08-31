@@ -46,7 +46,7 @@ class Question {
         $where=[];$params=[];
         if(($filters['module_id']??'')!==''){$where[]='s.module_id=?';$params[]=(int)$filters['module_id'];}
         if(($filters['subject_id']??'')!==''){$where[]='q.subject_id=?';$params[]=(int)$filters['subject_id'];}
-        if(in_array(($filters['type']??''),['mcq','complete','match','compare','essay'],true)){$where[]='q.type=?';$params[]=$filters['type'];}
+        if(in_array(($filters['type']??''),['mcq','complete','match','compare','essay','true_false'],true)){$where[]='q.type=?';$params[]=$filters['type'];}
         if(in_array(($filters['answer_status']??''),['available','unavailable'],true)){$where[]='q.answer_status=?';$params[]=$filters['answer_status'];}
         if(($filters['search']??'')!==''){$v='%'.trim((string)$filters['search']).'%';$where[]='(q.question_text LIKE ? OR q.answer_data LIKE ? OR EXISTS (SELECT 1 FROM question_sources qss WHERE qss.question_id=q.id AND qss.source_name LIKE ?))';array_push($params,$v,$v,$v);}
         $source=$filters['source_names']??[];if(is_string($source))$source=[$source];$source=array_values(array_intersect((array)$source,['final','end_module']));
@@ -74,7 +74,7 @@ class Question {
         }
 
         $type = $data['type'] ?? '';
-        $allowedTypes = ['mcq', 'complete', 'match', 'compare', 'essay'];
+        $allowedTypes = ['mcq', 'complete', 'match', 'compare', 'essay', 'true_false'];
         if (empty($type) || !in_array($type, $allowedTypes, true)) {
             $errors[] = 'Valid question type is required.';
         }
@@ -128,6 +128,13 @@ class Question {
                 if (!is_array($matches) || empty($matches)) {
                     $errors[] = 'Correct matches configuration is required.';
                 } else {
+                    $leftKeys = array_map('strval', $left);
+                    $matchKeys = array_map('strval', array_keys($matches));
+                    sort($leftKeys);
+                    sort($matchKeys);
+                    if ($leftKeys !== $matchKeys) {
+                        $errors[] = 'Every left item must have exactly one correct match.';
+                    }
                     foreach ($matches as $lItem => $rItem) {
                         if (!in_array(trim((string)$lItem), $left, true)) {
                             $errors[] = "Match key \"{$lItem}\" is not present in the left items list.";
@@ -136,6 +143,11 @@ class Question {
                             $errors[] = "Match value \"{$rItem}\" is not present in the right items list.";
                         }
                     }
+                }
+            } elseif ($type === 'true_false') {
+                $answer = strtolower(trim((string)($data['answer'] ?? '')));
+                if (!in_array($answer, ['true', 'false'], true)) {
+                    $errors[] = 'True/False answer must be true or false.';
                 }
             } else {
                 // complete, compare, essay
@@ -226,6 +238,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => $matches
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => strtolower(trim((string)($data['answer'] ?? '')))]);
                 } else {
                     $answerData = json_encode([
                         'answer' => trim($data['answer'] ?? '')
@@ -247,6 +261,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => null
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => null]);
                 } else {
                     $answerData = json_encode([
                         'answer' => null
@@ -321,6 +337,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => $matches
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => strtolower(trim((string)($data['answer'] ?? '')))]);
                 } else {
                     $answerData = json_encode([
                         'answer' => trim($data['answer'] ?? '')
@@ -341,6 +359,8 @@ class Question {
                         'right_items' => $right,
                         'matches' => null
                     ]);
+                } elseif ($type === 'true_false') {
+                    $answerData = json_encode(['answer' => null]);
                 } else {
                     $answerData = json_encode([
                         'answer' => null
@@ -365,7 +385,8 @@ class Question {
     }
 
     /**
-     * Delete a question
+     * Delete a question. Any transient quizzes that reference it are
+     * discarded first.
      */
     public static function deleteQuestion(int $id): array {
         $q = self::getQuestionById($id);
@@ -373,17 +394,17 @@ class Question {
             return ['success' => false, 'message' => 'Question not found.'];
         }
 
-        $usage = Database::fetchOne(
-            'SELECT COUNT(DISTINCT quiz_id) AS cnt FROM quiz_questions WHERE question_id = ?',
-            [$id]
-        );
-        $quizCount = (int)($usage['cnt'] ?? 0);
-        if ($quizCount > 0) {
-            return ['success' => false, 'message' => "Question cannot be deleted because it is used in {$quizCount} active quiz record(s). Finish or cancel the active quiz first."];
-        }
-
         try {
             return Database::transaction(function (PDO $pdo) use ($id): array {
+                // Quizzes are transient; deleting the parent quiz cascades its links and answers.
+                $pdo->prepare(
+                    'DELETE FROM quizzes
+                     WHERE id IN (
+                         SELECT DISTINCT quiz_id
+                         FROM quiz_questions
+                         WHERE question_id = ?
+                     )'
+                )->execute([$id]);
                 // Delete source information cascade
                 $pdo->prepare('DELETE FROM question_sources WHERE question_id = ?')->execute([$id]);
                 $pdo->prepare('DELETE FROM questions WHERE id = ?')->execute([$id]);

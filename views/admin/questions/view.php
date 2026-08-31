@@ -54,7 +54,9 @@
                         $type = $question['type'];
                         ?>
                         
-                        <?php if ($type === 'mcq'): ?>
+                        <?php if ($type === 'true_false'): ?>
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Correct Answer:</p><div style="padding: 1rem; background: var(--success-bg); border: 1px solid var(--success-border); border-radius: var(--radius-sm); color: #14532d; font-weight: 700;"><?= e(ucfirst((string)($decoded['answer'] ?? ''))) ?></div>
+                        <?php elseif ($type === 'mcq'): ?>
                             <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Options:</p>
                             <ul style="list-style: none; margin-bottom: 1rem; padding-left: 0;">
                                 <?php foreach ($decoded['options'] ?? [] as $idx => $opt): 
@@ -73,11 +75,11 @@
 
                         <?php elseif ($type === 'match'): ?>
                             <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Items Matching:</p>
-                            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; background: #ffffff; padding: 1rem; border-radius: var(--radius-sm);">
+                            <div class="admin-match-answer-grid">
                                 <?php foreach ($decoded['matches'] ?? [] as $leftItem => $rightItem): ?>
-                                    <div style="padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-page); font-weight: 600;"><?= e($leftItem) ?></div>
-                                    <div style="color: var(--text-muted); font-weight: bold;">&rarr;</div>
-                                    <div style="padding: 0.5rem; border: 1px solid var(--success-border); border-radius: var(--radius-sm); background: var(--success-bg); color: #14532d; font-weight: 600;"><?= e($rightItem) ?></div>
+                                    <div class="admin-match-answer-item admin-match-answer-item-left"><?= e($leftItem) ?></div>
+                                    <div class="admin-match-answer-arrow">&rarr;</div>
+                                    <div class="admin-match-answer-item admin-match-answer-item-right"><?= e($rightItem) ?></div>
                                 <?php endforeach; ?>
                             </div>
 
@@ -98,7 +100,7 @@
             </div>
             <div>
                 <strong>Exam Appearances (<?= count($question['appearances'] ?? []) ?>):</strong>
-                <?php if (!empty($question['appearances'])): ?><ul style="margin:.35rem 0 0;padding-left:1.1rem"><?php foreach ($question['appearances'] as $appearance): ?><li><?= e(ucwords(str_replace('_',' ',$appearance['source_name']))) ?> — <?= e(ucwords($appearance['exam_term'])) ?> Term <?= (int)$appearance['exam_year'] ?></li><?php endforeach; ?></ul><?php else: ?><div style="margin-top:.15rem"><em>No exam appearances recorded.</em></div><?php endif; ?>
+                <?php if (!empty($question['appearances'])): ?><ul style="margin:.35rem 0 0;padding-left:1.1rem"><?php foreach ($question['appearances'] as $appearance): ?><li><?= e(ucwords(str_replace('_',' ',$appearance['source_name']))) ?> — <?= e(ucwords($appearance['exam_term'] ?? '')) ?> Term <?= (int)$appearance['exam_year'] ?></li><?php endforeach; ?></ul><?php else: ?><div style="margin-top:.15rem"><em>No exam appearances recorded.</em></div><?php endif; ?>
             </div>
             <div>
                 <strong>Timestamps:</strong>

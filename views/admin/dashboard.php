@@ -1,54 +1,54 @@
-<div class="admin-dashboard-container">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+<div class="admin-dashboard-container dashboard-page">
+    <div class="dashboard-hero">
         <div>
             <h1>Admin Dashboard</h1>
-            <p style="color: var(--text-muted);">Welcome back, <strong><?= e($user['username'] ?? 'Admin') ?></strong>. Platform management overview.</p>
+            <p class="dashboard-intro">Welcome back, <strong><?= e($user['username'] ?? 'Admin') ?></strong>. Platform management overview.</p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary btn-sm">+ Add Question</a>
-            <a href="<?= url('admin/module-form.php') ?>" class="btn btn-secondary btn-sm">+ Add Module</a>
-            <a href="<?= url('admin/subject-form.php') ?>" class="btn btn-secondary btn-sm">+ Add Subject</a>
+        <div class="dashboard-actions">
+            <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Question</span></a>
+            <a href="<?= url('admin/module-form.php') ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Module</span></a>
+            <a href="<?= url('admin/subject-form.php') ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Subject</span></a>
         </div>
     </div>
 
     <!-- Metrics Grid -->
     <div class="metrics-grid">
-        <a href="<?= url('admin/modules.php') ?>" class="metric-card" style="text-decoration: none;">
-            <span class="metric-title">Modules</span>
+        <a href="<?= url('admin/modules.php') ?>" class="metric-card dashboard-metric dashboard-metric-link">
+            <span class="metric-title"><i class="fa-solid fa-layer-group metric-icon" aria-hidden="true"></i>Modules</span>
             <span class="metric-value"><?= (int)($stats['modules'] ?? 0) ?></span>
         </a>
-        <a href="<?= url('admin/subjects.php') ?>" class="metric-card" style="text-decoration: none;">
-            <span class="metric-title">Subjects</span>
+        <a href="<?= url('admin/subjects.php') ?>" class="metric-card dashboard-metric dashboard-metric-link">
+            <span class="metric-title"><i class="fa-solid fa-book-open metric-icon" aria-hidden="true"></i>Subjects</span>
             <span class="metric-value"><?= (int)($stats['subjects'] ?? 0) ?></span>
         </a>
-        <a href="<?= url('admin/questions.php') ?>" class="metric-card" style="text-decoration: none;">
-            <span class="metric-title">Questions</span>
+        <a href="<?= url('admin/questions.php') ?>" class="metric-card dashboard-metric dashboard-metric-link">
+            <span class="metric-title"><i class="fa-solid fa-circle-question metric-icon" aria-hidden="true"></i>Questions</span>
             <span class="metric-value"><?= (int)($stats['questions'] ?? 0) ?></span>
         </a>
-        <div class="metric-card">
-            <span class="metric-title">Registered Students</span>
+        <div class="metric-card dashboard-metric">
+            <span class="metric-title"><i class="fa-solid fa-user-graduate metric-icon" aria-hidden="true"></i>Registered Students</span>
             <span class="metric-value"><?= (int)($stats['students'] ?? 0) ?></span>
         </div>
-        <div class="metric-card">
-            <span class="metric-title">Quizzes Generated</span>
+        <div class="metric-card dashboard-metric">
+            <span class="metric-title"><i class="fa-solid fa-clipboard-check metric-icon" aria-hidden="true"></i>Quizzes Generated</span>
             <span class="metric-value"><?= (int)($stats['quizzes'] ?? 0) ?></span>
         </div>
-        <a href="<?= url('admin/questions.php?answer_status=unavailable') ?>" class="metric-card" style="text-decoration: none;">
-            <span class="metric-title">Unanswered Questions</span>
-            <span class="metric-value" style="color: var(--warning);"><?= (int)($stats['unanswered'] ?? 0) ?></span>
+        <a href="<?= url('admin/questions.php?answer_status=unavailable') ?>" class="metric-card dashboard-metric dashboard-metric-link">
+            <span class="metric-title"><i class="fa-solid fa-triangle-exclamation metric-icon" aria-hidden="true"></i>Unanswered Questions</span>
+            <span class="metric-value metric-value-warning"><?= (int)($stats['unanswered'] ?? 0) ?></span>
         </a>
     </div>
 
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">Question Bank</h2>
-            <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary btn-sm">+ Add Question</a>
+            <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Question</span></a>
         </div>
-        <p style="color: var(--text);">
-            Manage medical exam questions across all modules and subjects. All 5 question types are supported: MCQ, Complete, Match, Compare, and Essay.
+        <p class="dashboard-card-copy">
+            Manage medical exam questions across all modules and subjects. All 6 question types are supported: MCQ, Complete, Match, Compare, Essay, and True / False.
         </p>
-        <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="<?= url('admin/questions.php') ?>" class="btn btn-primary">Browse Question Bank (Choose a Module)</a>
+        <div class="dashboard-actions dashboard-card-actions">
+            <a href="<?= url('admin/questions.php') ?>" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Browse Question Bank (Choose a Module)</span></a>
             <a href="<?= url('admin/questions.php?answer_status=unavailable') ?>" class="btn btn-secondary">Unanswered (<?= (int)($stats['unanswered'] ?? 0) ?>)</a>
         </div>
     </div>
@@ -56,12 +56,12 @@
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">Academic Hierarchy</h2>
-            <a href="<?= url('admin/modules.php') ?>" class="btn btn-secondary btn-sm">Manage Modules &rarr;</a>
+            <a href="<?= url('admin/modules.php') ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i><span>Manage Modules</span></a>
         </div>
-        <p style="color: var(--text);">
+        <p class="dashboard-card-copy">
             Academic hierarchy is established: <strong>Module &rarr; Subject &rarr; Questions</strong>.
         </p>
-        <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <div class="dashboard-actions dashboard-card-actions">
             <a href="<?= url('admin/modules.php') ?>" class="btn btn-secondary">View All Modules (<?= (int)($stats['modules'] ?? 0) ?>)</a>
             <a href="<?= url('admin/subjects.php') ?>" class="btn btn-secondary">View All Subjects (<?= (int)($stats['subjects'] ?? 0) ?>)</a>
         </div>

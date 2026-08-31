@@ -1,6 +1,0 @@
-{
-  "questions": [
-    {"type":"mcq","question":"[QA DUPLICATE] Which nerve supplies the diaphragm?","choices":{"A":"Vagus nerve","B":"Phrenic nerve","C":"Intercostal nerve","D":"Radial nerve"},"answer":"B","frequency":2,"appearances":[{"source":"end_module","year":2028,"term":"second"}]},
-    {"type":"mcq","question":"[QA DUPLICATE] Which nerve supplies the diaphragm?","choices":{"A":"Vagus nerve","B":"Phrenic nerve","C":"Intercostal nerve","D":"Radial nerve"},"answer":"B","frequency":2,"appearances":[{"source":"end_module","year":2028,"term":"second"}]}
-  ]
-}

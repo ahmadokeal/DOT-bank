@@ -7,7 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !CSRF::verify()) {
     header('Location: ' . url('student/quiz-builder.php'));
     exit;
 }
-$result = Quiz::discard((int) ($_POST['quiz_id'] ?? 0), (int) Auth::id());
+$quizId = (int)($_POST['quiz_id'] ?? 0);
+$result = Quiz::discard($quizId, (int) Auth::id());
+if (isset($_SESSION['_quiz_match_display'][$quizId])) unset($_SESSION['_quiz_match_display'][$quizId]);
 View::flash($result['success'] ? 'success' : 'error', $result['message'] ?? 'The quiz could not be discarded.');
 header('Location: ' . url('student/quiz-builder.php'));
 exit;

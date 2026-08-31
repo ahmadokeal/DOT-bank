@@ -17,53 +17,57 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
         </a>
 
         <?php if ($isLoggedIn): ?>
-            <nav>
+            <button class="nav-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open navigation">
+                <i class="fa-solid fa-bars nav-toggle-icon" aria-hidden="true"></i>
+            </button>
+
+            <nav id="primary-navigation" aria-label="Primary navigation">
                 <ul class="nav-links">
                     <?php if ($isAdmin): ?>
                         <li>
                             <a href="<?= url('admin/dashboard.php') ?>" class="nav-link <?= ($currentScript === 'dashboard.php' && str_contains($_SERVER['SCRIPT_NAME'] ?? '', 'admin')) ? 'active' : '' ?>">
-                                Dashboard
+                                <i class="fa-solid fa-gauge-high nav-icon" aria-hidden="true"></i><span>Dashboard</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('admin/modules.php') ?>" class="nav-link <?= str_contains($currentScript, 'module') ? 'active' : '' ?>">
-                                Modules
+                                <i class="fa-solid fa-layer-group nav-icon" aria-hidden="true"></i><span>Modules</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('admin/subjects.php') ?>" class="nav-link <?= str_contains($currentScript, 'subject') ? 'active' : '' ?>">
-                                Subjects
+                                <i class="fa-solid fa-book-open nav-icon" aria-hidden="true"></i><span>Subjects</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('admin/questions.php') ?>" class="nav-link <?= str_contains($currentScript, 'question') ? 'active' : '' ?>">
-                                Questions
+                                <i class="fa-solid fa-circle-question nav-icon" aria-hidden="true"></i><span>Questions</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('admin/import.php') ?>" class="nav-link <?= $currentScript === 'import.php' ? 'active' : '' ?>">
-                                JSON Import
+                                <i class="fa-solid fa-file-import nav-icon" aria-hidden="true"></i><span>JSON Import</span>
                             </a>
                         </li>
                     <?php else: ?>
                         <li>
                             <a href="<?= url('student/dashboard.php') ?>" class="nav-link <?= ($currentScript === 'dashboard.php' && str_contains($_SERVER['SCRIPT_NAME'] ?? '', 'student')) ? 'active' : '' ?>">
-                                Dashboard
+                                <i class="fa-solid fa-gauge-high nav-icon" aria-hidden="true"></i><span>Dashboard</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('student/modules.php') ?>" class="nav-link <?= str_contains($currentScript, 'module') ? 'active' : '' ?>">
-                                Curriculum Modules
+                                <i class="fa-solid fa-layer-group nav-icon" aria-hidden="true"></i><span>Curriculum Modules</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('student/questions.php') ?>" class="nav-link <?= str_contains($currentScript, 'question') ? 'active' : '' ?>">
-                                Browse Questions
+                                <i class="fa-solid fa-book-medical nav-icon" aria-hidden="true"></i><span>Browse Questions</span>
                             </a>
                         </li>
                         <li>
                             <a href="<?= url('student/quiz-builder.php') ?>" class="nav-link <?= str_contains($currentScript, 'quiz') ? 'active' : '' ?>">
-                                Create Quiz
+                                <i class="fa-solid fa-pen-to-square nav-icon" aria-hidden="true"></i><span>Create Quiz</span>
                             </a>
                         </li>
                     <?php endif; ?>
@@ -77,7 +81,7 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
                         <?= $isAdmin ? 'Admin' : 'Student' ?>
                     </span>
                 </div>
-                <a href="<?= url('logout.php') ?>" class="btn btn-secondary btn-sm">Log Out</a>
+                <a href="<?= url('logout.php') ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Log Out</span></a>
             </div>
         <?php else: ?>
             <div class="user-nav-section">

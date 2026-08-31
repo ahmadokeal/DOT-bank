@@ -6,7 +6,7 @@
         </div>
         <div>
             <a href="<?= url('admin/module-form.php') ?>" class="btn btn-primary">
-                <span>+ Add Module</span>
+                <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Module</span>
             </a>
         </div>
     </div>
@@ -19,7 +19,7 @@
                 No academic modules have been created yet. Get started by creating your first medical module.
             </p>
             <a href="<?= url('admin/module-form.php') ?>" class="btn btn-primary">
-                Create First Module
+                <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Create First Module</span>
             </a>
         </div>
     <?php else: ?>
@@ -52,13 +52,13 @@
                                 </td>
                                 <td style="padding: 1rem 1.25rem; text-align: right; white-space: nowrap;">
                                     <a href="<?= url('admin/subjects.php?module_id=' . (int)$mod['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">
-                                        View Subjects
+                                        <i class="fa-solid fa-book-open" aria-hidden="true"></i><span>View Subjects</span>
                                     </a>
                                     <a href="<?= url('admin/module-form.php?id=' . (int)$mod['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">
-                                        Edit
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i><span>Edit</span>
                                     </a>
                                     <a href="<?= url('admin/module-delete.php?id=' . (int)$mod['id']) ?>" class="btn btn-sm" style="background-color: var(--error-bg); color: var(--error); border-color: var(--error-border);">
-                                        Delete
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i><span>Delete</span>
                                     </a>
                                 </td>
                             </tr>

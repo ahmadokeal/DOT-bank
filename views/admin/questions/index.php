@@ -1,21 +1,21 @@
 <div class="admin-questions-container">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div class="question-page-header">
         <div>
             <h1>Question Bank</h1>
-            <p style="color: var(--text-muted);">Select a module to open its bounded Question Bank.</p>
+            <p>Select a module to open its bounded Question Bank.</p>
         </div>
         <div>
             <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary">
-                <span>+ Add Question</span>
+                <i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add Question</span>
             </a>
         </div>
     </div>
 
     <!-- Filters & Search Card -->
-    <div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem;">
-        <form method="GET" action="<?= url('admin/questions.php') ?>" id="filter-form" style="display: flex; flex-direction: column; gap: 1rem;">
+    <div class="card question-filters-card">
+        <form method="GET" action="<?= url('admin/questions.php') ?>" id="filter-form" class="question-filters-form">
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="question-filters-grid">
                 <!-- Search input -->
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" for="search">Search</label>
@@ -58,6 +58,7 @@
                         <option value="match" <?= ($filters['type'] === 'match') ? 'selected' : '' ?>>Match</option>
                         <option value="compare" <?= ($filters['type'] === 'compare') ? 'selected' : '' ?>>Compare</option>
                         <option value="essay" <?= ($filters['type'] === 'essay') ? 'selected' : '' ?>>Essay</option>
+                        <option value="true_false" <?= ($filters['type'] === 'true_false') ? 'selected' : '' ?>>True / False</option>
                     </select>
                 </div>
 
@@ -86,19 +87,19 @@
                 <fieldset class="form-group" style="margin:0;border:0;padding:0"><legend class="form-label">Exam Source</legend><label><input type="checkbox" name="source_names[]" value="final" <?= in_array('final',$filters['source_names']??[],true)?'checked':'' ?>> Final</label> <label><input type="checkbox" name="source_names[]" value="end_module" <?= in_array('end_module',$filters['source_names']??[],true)?'checked':'' ?>> End Module</label></fieldset>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; align-items: center; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.25rem;">
-                <a href="<?= url('admin/questions.php') ?>" class="btn btn-secondary btn-sm">Reset Filters</a>
-                <button type="submit" class="btn btn-primary btn-sm">Apply Filters / Search</button>
+            <div class="question-filters-actions">
+                <a href="<?= url('admin/questions.php') ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i><span>Reset Filters</span></a>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Apply Filters / Search</span></button>
             </div>
         </form>
     </div>
 
     <!-- Questions list -->
     <?php if (empty($questions)): ?>
-        <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--text-muted);">❓</div>
-            <h3 style="margin-bottom: 0.5rem;">No Questions Found</h3>
-            <p style="color: var(--text-muted); max-width: 420px; margin: 0 auto 1.5rem auto;">
+        <div class="card question-empty-state">
+            <div class="question-empty-icon">❓</div>
+            <h3>No Questions Found</h3>
+            <p>
                 No questions match your current search queries or filter constraints.
             </p>
             <a href="<?= url('admin/question-form.php') ?>" class="btn btn-primary">
@@ -106,9 +107,9 @@
             </a>
         </div>
     <?php else: ?>
-        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 1.5rem;">
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.925rem;">
+        <div class="card admin-question-list-shell">
+            <div class="admin-question-list-scroll" style="overflow-x: auto;">
+                <table class="admin-question-list-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.925rem;">
                     <thead>
                         <tr style="background: var(--bg-page); border-bottom: 1px solid var(--border);">
                             <th style="padding: 0.85rem 1.25rem; font-weight: 600; color: var(--dark); width: 80px;">Type</th>
@@ -121,16 +122,19 @@
                     </thead>
                     <tbody>
                         <?php foreach ($questions as $q): ?>
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td style="padding: 1rem 1.25rem; vertical-align: top;">
+                            <tr class="admin-question-list-row" style="border-bottom: 1px solid var(--border);">
+                                <td class="admin-question-list-cell admin-question-type-cell" data-label="Type" style="padding: 1rem 1.25rem; vertical-align: top;">
                                     <span class="badge" style="background-color: var(--primary-light); color: var(--primary); font-size: 0.7rem; font-weight: 700;">
                                         <?= strtoupper(e($q['type'])) ?>
                                     </span>
                                 </td>
-                                <td style="padding: 1rem 1.25rem; vertical-align: top;">
-                                    <div style="font-weight: 600; color: var(--dark); margin-bottom: 0.25rem; line-height: 1.4; max-height: 4.2em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                <td class="admin-question-list-cell admin-question-text-cell" data-label="Question" style="padding: 1rem 1.25rem; vertical-align: top;">
+                                    <div class="question-list-text">
                                         <a href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>" style="color: var(--dark);">
-                                            <?= e($q['question_text']) ?>
+                                            <span class="question-list-preview"><?= e($q['question_text']) ?></span>
+                                        </a>
+                                        <a class="question-list-view-link" href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>">
+                                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i><span>View question</span>
                                         </a>
                                     </div>
                                     <?php if (!empty($q['source_name'])): ?>
@@ -139,24 +143,24 @@
                                         </div>
                                     <?php endif; ?>
                                 </td>
-                                <td style="padding: 1rem 1.25rem; vertical-align: top; font-size: 0.85rem; color: var(--text);">
+                                <td class="admin-question-list-cell admin-question-context-cell" data-label="Module &amp; Subject" style="padding: 1rem 1.25rem; vertical-align: top; font-size: 0.85rem; color: var(--text);">
                                     <div style="font-weight: 600; color: var(--primary);"><?= e($q['module_name']) ?></div>
                                     <div style="color: var(--text-muted);"><?= e($q['subject_name']) ?></div>
                                 </td>
-                                <td style="padding: 1rem 1.25rem; vertical-align: top; text-align: center; font-weight: 700; color: var(--dark);">
+                                <td class="admin-question-list-cell" data-label="Frequency" style="padding: 1rem 1.25rem; vertical-align: top; text-align: center; font-weight: 700; color: var(--dark);">
                                     <?= (int)$q['frequency'] ?>
                                 </td>
-                                <td style="padding: 1rem 1.25rem; vertical-align: top; text-align: center;">
+                                <td class="admin-question-list-cell admin-question-status-cell" data-label="Answer" style="padding: 1rem 1.25rem; vertical-align: top; text-align: center;">
                                     <?php if ($q['answer_status'] === 'available'): ?>
                                         <span class="badge" style="background-color: var(--success-bg); color: var(--success); font-size: 0.725rem;">Available</span>
                                     <?php else: ?>
                                         <span class="badge" style="background-color: var(--warning-bg); color: var(--warning); font-size: 0.725rem;">Unavailable</span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="padding: 1rem 1.25rem; vertical-align: top; text-align: right; white-space: nowrap;">
-                                    <a href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">View</a>
-                                    <a href="<?= url('admin/question-form.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;">Edit</a>
-                                    <a href="<?= url('admin/question-delete.php?id=' . (int)$q['id']) ?>" class="btn btn-sm" style="background-color: var(--error-bg); color: var(--error); border-color: var(--error-border);">Delete</a>
+                                <td class="admin-question-list-cell admin-question-actions-cell" data-label="Actions" style="padding: 1rem 1.25rem; vertical-align: top; text-align: right; white-space: nowrap;">
+                                    <a href="<?= url('admin/question-view.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;"><i class="fa-solid fa-eye" aria-hidden="true"></i><span>View</span></a>
+                                    <a href="<?= url('admin/question-form.php?id=' . (int)$q['id']) ?>" class="btn btn-secondary btn-sm" style="margin-right: 0.25rem;"><i class="fa-solid fa-pen" aria-hidden="true"></i><span>Edit</span></a>
+                                    <a href="<?= url('admin/question-delete.php?id=' . (int)$q['id']) ?>" class="btn btn-sm" style="background-color: var(--error-bg); color: var(--error); border-color: var(--error-border);"><i class="fa-solid fa-trash" aria-hidden="true"></i><span>Delete</span></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -167,11 +171,11 @@
 
         <!-- Pagination Controls -->
         <?php if ($totalPages > 1): ?>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); flex-wrap: wrap; gap: 1rem;">
+            <div class="question-pagination" style="display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--text-muted); flex-wrap: wrap; gap: 1rem;">
                 <div>
                     Showing <?= $offset + 1 ?> to <?= min($offset + $limit, $totalQuestions) ?> of <?= $totalQuestions ?> questions
                 </div>
-                <div style="display: flex; gap: 0.35rem;">
+                <div class="question-pagination-links" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                     <?php if ($page > 1): ?>
                         <a href="<?= url('admin/questions.php?' . http_build_query(array_merge($filters, ['page' => $page - 1]))) ?>" class="btn btn-secondary btn-sm">&larr; Prev</a>
                     <?php endif; ?>
